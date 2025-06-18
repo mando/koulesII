@@ -142,9 +142,13 @@
                     <p>Controls now use realistic acceleration!</p>
                     <p>Build momentum and use inertia strategically</p>
                     <br />
+                    <p><strong>⚠️ WARNING:</strong></p>
+                    <p style="color: #ff4444;">Hitting the walls will destroy your rocket!</p>
+                    <p>Stay away from the edges!</p>
+                    <br />
                     <p><strong>General:</strong></p>
                     <p>ESC - Menu</p>
-                    <p>R - Restart level</p>
+                    <p></p>R - Restart level</p>
                 </div>
                 <button onclick="showMainMenu()">Back to Menu</button>
             </div>
@@ -158,7 +162,7 @@
             <div id="controls-info" class="hidden">
                 <div>Player 1: Arrow Keys (thrust) + Space (brake)</div>
                 <div>Player 2: WASD (thrust) + Shift (brake)</div>
-                <div>ESC: Menu | R: Restart | Acceleration-based controls!</div>
+                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL ROCKETS!</div>
             </div>
 
             <div id="game-over" class="menu hidden">
@@ -511,21 +515,41 @@
             function keepInBounds(obj) {
                 const margin = obj.radius;
 
-                if (obj.x < margin) {
-                    obj.x = margin;
-                    obj.vx = Math.abs(obj.vx) * 0.8;
-                }
-                if (obj.x > GAME_WIDTH - margin) {
-                    obj.x = GAME_WIDTH - margin;
-                    obj.vx = -Math.abs(obj.vx) * 0.8;
-                }
-                if (obj.y < margin) {
-                    obj.y = margin;
-                    obj.vy = Math.abs(obj.vy) * 0.8;
-                }
-                if (obj.y > GAME_HEIGHT - margin) {
-                    obj.y = GAME_HEIGHT - margin;
-                    obj.vy = -Math.abs(obj.vy) * 0.8;
+                // Check for boundary collision
+                const hitLeft = obj.x < margin;
+                const hitRight = obj.x > GAME_WIDTH - margin;
+                const hitTop = obj.y < margin;
+                const hitBottom = obj.y > GAME_HEIGHT - margin;
+
+                if (hitLeft || hitRight || hitTop || hitBottom) {
+                    if (obj.type === "rocket") {
+                        // Rockets die when hitting walls
+                        obj.live = false;
+                        obj.visible = false;
+                        playSound("rocketDeath");
+
+                        // Add explosion effect
+                        createExplosion(obj.x, obj.y);
+                        return;
+                    } else {
+                        // Other objects bounce off walls
+                        if (hitLeft) {
+                            obj.x = margin;
+                            obj.vx = Math.abs(obj.vx) * 0.8;
+                        }
+                        if (hitRight) {
+                            obj.x = GAME_WIDTH - margin;
+                            obj.vx = -Math.abs(obj.vx) * 0.8;
+                        }
+                        if (hitTop) {
+                            obj.y = margin;
+                            obj.vy = Math.abs(obj.vy) * 0.8;
+                        }
+                        if (hitBottom) {
+                            obj.y = GAME_HEIGHT - margin;
+                            obj.vy = -Math.abs(obj.vy) * 0.8;
+                        }
+                    }
                 }
             }
 
@@ -707,6 +731,44 @@
                     .classList.remove("hidden");
             }
 
+            function createExplosion(x, y) {
+                // Create simple explosion effect with particles
+                for (let i = 0; i < 8; i++) {
+                    const particle = new PIXI.Graphics();
+                    particle.beginFill(0xff4444);
+                    particle.drawCircle(0, 0, 2);
+                    particle.endFill();
+
+                    particle.x = x;
+                    particle.y = y;
+
+                    const angle = (i / 8) * Math.PI * 2;
+                    const speed = 2 + Math.random() * 3;
+                    particle.vx = Math.cos(angle) * speed;
+                    particle.vy = Math.sin(angle) * speed;
+                    particle.life = 30; // frames to live
+
+                    app.stage.addChild(particle);
+
+                    // Animate particle
+                    const animateParticle = () => {
+                        particle.life--;
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vx *= 0.95;
+                        particle.vy *= 0.95;
+                        particle.alpha = particle.life / 30;
+
+                        if (particle.life <= 0) {
+                            app.stage.removeChild(particle);
+                        } else {
+                            requestAnimationFrame(animateParticle);
+                        }
+                    };
+                    animateParticle();
+                }
+            }
+
             function hideAllMenus() {
                 document.getElementById("main-menu").classList.add("hidden");
                 document
@@ -761,6 +823,10 @@
                         case "levelComplete":
                             frequency = 659.25;
                             duration = 0.8;
+                            break;
+                        case "rocketDeath":
+                            frequency = 120;
+                            duration = 0.6;
                             break;
                     }
 

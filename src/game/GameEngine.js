@@ -500,21 +500,40 @@ export class GameEngine extends PIXI.utils.EventEmitter {
   keepInBounds(obj) {
     const margin = obj.radius;
 
-    if (obj.x < margin) {
-      obj.x = margin;
-      obj.vx = Math.abs(obj.vx) * 0.8;
-    }
-    if (obj.x > this.app.screen.width - margin) {
-      obj.x = this.app.screen.width - margin;
-      obj.vx = -Math.abs(obj.vx) * 0.8;
-    }
-    if (obj.y < margin) {
-      obj.y = margin;
-      obj.vy = Math.abs(obj.vy) * 0.8;
-    }
-    if (obj.y > this.app.screen.height - margin) {
-      obj.y = this.app.screen.height - margin;
-      obj.vy = -Math.abs(obj.vy) * 0.8;
+    // Check for boundary collision
+    const hitLeft = obj.x < margin;
+    const hitRight = obj.x > this.app.screen.width - margin;
+    const hitTop = obj.y < margin;
+    const hitBottom = obj.y > this.app.screen.height - margin;
+
+    if (hitLeft || hitRight || hitTop || hitBottom) {
+      if (obj.type === GAME_CONSTANTS.ROCKET) {
+        // Rockets die when hitting walls
+        obj.live = false;
+        this.audioManager.playSound("rocketDeath");
+
+        // Add explosion effect
+        this.createExplosion(obj.x, obj.y);
+        return;
+      } else {
+        // Other objects bounce off walls
+        if (hitLeft) {
+          obj.x = margin;
+          obj.vx = Math.abs(obj.vx) * 0.8;
+        }
+        if (hitRight) {
+          obj.x = this.app.screen.width - margin;
+          obj.vx = -Math.abs(obj.vx) * 0.8;
+        }
+        if (hitTop) {
+          obj.y = margin;
+          obj.vy = Math.abs(obj.vy) * 0.8;
+        }
+        if (hitBottom) {
+          obj.y = this.app.screen.height - margin;
+          obj.vy = -Math.abs(obj.vy) * 0.8;
+        }
+      }
     }
   }
 
@@ -660,6 +679,44 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     this.clearGame();
     this.initLevel();
     this.gameState = "running";
+  }
+
+  createExplosion(x, y) {
+    // Create simple explosion effect with particles
+    for (let i = 0; i < 8; i++) {
+      const particle = new PIXI.Graphics();
+      particle.beginFill(0xff4444);
+      particle.drawCircle(0, 0, 2);
+      particle.endFill();
+
+      particle.x = x;
+      particle.y = y;
+
+      const angle = (i / 8) * Math.PI * 2;
+      const speed = 2 + Math.random() * 3;
+      particle.vx = Math.cos(angle) * speed;
+      particle.vy = Math.sin(angle) * speed;
+      particle.life = 30; // frames to live
+
+      this.gameContainer.addChild(particle);
+
+      // Animate particle
+      const animateParticle = () => {
+        particle.life--;
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vx *= 0.95;
+        particle.vy *= 0.95;
+        particle.alpha = particle.life / 30;
+
+        if (particle.life <= 0) {
+          this.gameContainer.removeChild(particle);
+        } else {
+          requestAnimationFrame(animateParticle);
+        }
+      };
+      animateParticle();
+    }
   }
 
   stop() {
