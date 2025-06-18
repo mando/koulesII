@@ -1,0 +1,29 @@
+{
+  "name": "koules-pixijs",
+  "version": "1.0.0",
+  "description": "Koules game reimplemented in Pixi.js - A physics-based space game",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 3000"
+  },
+  "keywords": [
+    "game",
+    "pixijs",
+    "koules",
+    "physics",
+    "space",
+    "arcade"
+  ],
+  "author": "Converted from original Koules by Jan Hubicka",
+  "license": "GPL-2.0",
+  "devDependencies": {
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "matter-js": "^0.19.0",
+    "pixi.js": "^7.3.2"
+  }
+}

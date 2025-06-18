@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koules Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #0ff;
+            font-family: 'Courier New', monospace;
+        }
+        #test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #canvas-container {
+            border: 2px solid #333;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .info {
+            background: #111;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+        button {
+            background: transparent;
+            border: 1px solid #0ff;
+            color: #0ff;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #0ff;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="test-container">
+        <h1>Koules - Pixi.js Test</h1>
+        <div class="info">
+            <p>This is a test page to verify the Koules setup works correctly.</p>
+            <p>If you see a black rectangle below with some moving objects, the conversion is working!</p>
+        </div>
+
+        <div id="canvas-container">
+            <!-- Pixi.js canvas will be inserted here -->
+        </div>
+
+        <div class="info">
+            <h3>Test Controls:</h3>
+            <p>Arrow Keys: Move Player 1 (blue triangle)</p>
+            <p>WASD: Move Player 2 (red triangle)</p>
+            <p>Space/Shift: Brake</p>
+        </div>
+
+        <div>
+            <button onclick="startTest()">Start Test</button>
+            <button onclick="stopTest()">Stop Test</button>
+            <button onclick="resetTest()">Reset Test</button>
+        </div>
+
+        <div id="status" class="info">
+            Status: Ready
+        </div>
+    </div>
+
+    <script type="module">
+        import * as PIXI from 'https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.mjs';
+
+        let app = null;
+        let gameObjects = [];
+        let keys = {};
+        let isRunning = false;
+
+        // Simple input handling
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+            e.preventDefault();
+        });
+
+        async function initPixi() {
+            app = new PIXI.Application({
+                width: 800,
+                height: 600,
+                backgroundColor: 0x000011,
+                antialias: true
+            });
+
+            document.getElementById('canvas-container').appendChild(app.view);
+
+            // Create some stars
+            for (let i = 0; i < 50; i++) {
+                const star = new PIXI.Graphics();
+                star.beginFill(0x444444);
+                star.drawCircle(0, 0, Math.random() * 2 + 1);
+                star.endFill();
+                star.x = Math.random() * 800;
+                star.y = Math.random() * 600;
+                app.stage.addChild(star);
+            }
+
+            // Create player rockets
+            createPlayer(100, 300, 0x0088ff, 'player1'); // Blue
+            createPlayer(700, 300, 0xff4444, 'player2'); // Red
+
+            // Create some balls
+            for (let i = 0; i < 5; i++) {
+                createBall(
+                    200 + Math.random() * 400,
+                    150 + Math.random() * 300,
+                    0x888888
+                );
+            }
+
+            // Create holes
+            createHole(150, 150);
+            createHole(650, 450);
+
+            updateStatus('Pixi.js initialized successfully!');
+        }
+
+        function createPlayer(x, y, color, id) {
+            const rocket = new PIXI.Graphics();
+            rocket.beginFill(color);
+            rocket.moveTo(0, -15);
+            rocket.lineTo(-10, 10);
+            rocket.lineTo(10, 10);
+            rocket.closePath();
+            rocket.endFill();
+
+            rocket.lineStyle(2, 0x00ffff);
+            rocket.moveTo(0, 10);
+            rocket.lineTo(0, 15);
+
+            rocket.x = x;
+            rocket.y = y;
+            rocket.vx = 0;
+            rocket.vy = 0;
+            rocket.playerId = id;
+            rocket.type = 'player';
+
+            app.stage.addChild(rocket);
+            gameObjects.push(rocket);
+
+            return rocket;
+        }
+
+        function createBall(x, y, color) {
+            const ball = new PIXI.Graphics();
+            ball.beginFill(color);
+            ball.drawCircle(0, 0, 8);
+            ball.endFill();
+            ball.lineStyle(1, 0xaaaaaa);
+            ball.drawCircle(0, 0, 8);
+
+            ball.x = x;
+            ball.y = y;
+            ball.vx = (Math.random() - 0.5) * 2;
+            ball.vy = (Math.random() - 0.5) * 2;
+            ball.type = 'ball';
+
+            app.stage.addChild(ball);
+            gameObjects.push(ball);
+
+            return ball;
+        }
+
+        function createHole(x, y) {
+            const hole = new PIXI.Graphics();
+            hole.beginFill(0x000000);
+            hole.drawCircle(0, 0, 12);
+            hole.endFill();
+            hole.lineStyle(2, 0x404040);
+            hole.drawCircle(0, 0, 12);
+
+            hole.x = x;
+            hole.y = y;
+            hole.type = 'hole';
+
+            app.stage.addChild(hole);
+            gameObjects.push(hole);
+
+            return hole;
+        }
+
+        function updateGame() {
+            if (!isRunning) return;
+
+            gameObjects.forEach(obj => {
+                if (obj.type === 'player') {
+                    // Handle input
+                    let fx = 0, fy = 0;
+                    const thrust = 0.5;
+
+                    if (obj.playerId === 'player1') {
+                        if (keys['ArrowUp']) fy -= thrust;
+                        if (keys['ArrowDown']) fy += thrust;
+                        if (keys['ArrowLeft']) fx -= thrust;
+                        if (keys['ArrowRight']) fx += thrust;
+                        if (keys[' ']) { // Space
+                            obj.vx *= 0.9;
+                            obj.vy *= 0.9;
+                        }
+                    } else if (obj.playerId === 'player2') {
+                        if (keys['w']) fy -= thrust;
+                        if (keys['s']) fy += thrust;
+                        if (keys['a']) fx -= thrust;
+                        if (keys['d']) fx += thrust;
+                        if (keys['Shift']) {
+                            obj.vx *= 0.9;
+                            obj.vy *= 0.9;
+                        }
+                    }
+
+                    obj.vx += fx;
+                    obj.vy += fy;
+                    obj.vx *= 0.99; // friction
+                    obj.vy *= 0.99;
+
+                    // Update rotation
+                    if (fx !== 0 || fy !== 0) {
+                        obj.rotation = Math.atan2(fy, fx) + Math.PI / 2;
+                    }
+                }
+
+                if (obj.vx !== undefined) {
+                    obj.x += obj.vx;
+                    obj.y += obj.vy;
+
+                    // Bounce off walls
+                    if (obj.x < 20 || obj.x > 780) obj.vx *= -0.8;
+                    if (obj.y < 20 || obj.y > 580) obj.vy *= -0.8;
+
+                    obj.x = Math.max(20, Math.min(780, obj.x));
+                    obj.y = Math.max(20, Math.min(580, obj.y));
+                }
+            });
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = 'Status: ' + message;
+        }
+
+        // Global functions for buttons
+        window.startTest = async function() {
+            if (!app) {
+                await initPixi();
+            }
+            isRunning = true;
+            app.ticker.add(updateGame);
+            updateStatus('Test running - Use arrow keys and WASD to control rockets');
+        };
+
+        window.stopTest = function() {
+            isRunning = false;
+            if (app) {
+                app.ticker.remove(updateGame);
+            }
+            updateStatus('Test stopped');
+        };
+
+        window.resetTest = function() {
+            if (app) {
+                app.destroy(true);
+                app = null;
+                gameObjects = [];
+                document.getElementById('canvas-container').innerHTML = '';
+            }
+            isRunning = false;
+            updateStatus('Test reset - click Start Test to begin');
+        };
+
+        // Initialize when page loads
+        updateStatus('Ready - click Start Test to begin');
+    </script>
+</body>
+</html>
