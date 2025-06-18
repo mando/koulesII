@@ -142,9 +142,9 @@
                     <p>Controls now use realistic acceleration!</p>
                     <p>Build momentum and use inertia strategically</p>
                     <br />
-                    <p><strong>⚠️ WARNING:</strong></p>
-                    <p style="color: #ff4444;">Hitting the walls will destroy your rocket!</p>
-                    <p>Stay away from the edges!</p>
+                    <p><strong>⚠️ DANGER ZONE:</strong></p>
+                    <p style="color: #ff4444;">Walls are DEADLY! All objects die on contact!</p>
+                    <p>Keep everything away from the edges!</p>
                     <br />
                     <p><strong>General:</strong></p>
                     <p>ESC - Menu</p>
@@ -162,7 +162,7 @@
             <div id="controls-info" class="hidden">
                 <div>Player 1: Arrow Keys (thrust) + Space (brake)</div>
                 <div>Player 2: WASD (thrust) + Shift (brake)</div>
-                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL ROCKETS!</div>
+                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL EVERYTHING!</div>
             </div>
 
             <div id="game-over" class="menu hidden">
@@ -522,34 +522,25 @@
                 const hitBottom = obj.y > GAME_HEIGHT - margin;
 
                 if (hitLeft || hitRight || hitTop || hitBottom) {
-                    if (obj.type === "rocket") {
-                        // Rockets die when hitting walls
-                        obj.live = false;
-                        obj.visible = false;
-                        playSound("rocketDeath");
-
-                        // Add explosion effect
-                        createExplosion(obj.x, obj.y);
+                    // Skip holes - they don't move and shouldn't die
+                    if (obj.type === "hole") {
                         return;
-                    } else {
-                        // Other objects bounce off walls
-                        if (hitLeft) {
-                            obj.x = margin;
-                            obj.vx = Math.abs(obj.vx) * 0.8;
-                        }
-                        if (hitRight) {
-                            obj.x = GAME_WIDTH - margin;
-                            obj.vx = -Math.abs(obj.vx) * 0.8;
-                        }
-                        if (hitTop) {
-                            obj.y = margin;
-                            obj.vy = Math.abs(obj.vy) * 0.8;
-                        }
-                        if (hitBottom) {
-                            obj.y = GAME_HEIGHT - margin;
-                            obj.vy = -Math.abs(obj.vy) * 0.8;
-                        }
                     }
+
+                    // All movable objects die when hitting walls
+                    obj.live = false;
+                    obj.visible = false;
+
+                    // Play appropriate death sound
+                    if (obj.type === "rocket") {
+                        playSound("rocketDeath");
+                    } else {
+                        playSound("objectDeath");
+                    }
+
+                    // Add explosion effect with color based on object type
+                    const explosionColor = obj.type === "rocket" ? 0xff4444 : 0xffaa44;
+                    createExplosion(obj.x, obj.y, explosionColor);
                 }
             }
 
@@ -731,11 +722,11 @@
                     .classList.remove("hidden");
             }
 
-            function createExplosion(x, y) {
+            function createExplosion(x, y, color = 0xff4444) {
                 // Create simple explosion effect with particles
                 for (let i = 0; i < 8; i++) {
                     const particle = new PIXI.Graphics();
-                    particle.beginFill(0xff4444);
+                    particle.beginFill(color);
                     particle.drawCircle(0, 0, 2);
                     particle.endFill();
 
@@ -827,6 +818,10 @@
                         case "rocketDeath":
                             frequency = 120;
                             duration = 0.6;
+                            break;
+                        case "objectDeath":
+                            frequency = 200;
+                            duration = 0.4;
                             break;
                     }
 

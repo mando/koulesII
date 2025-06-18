@@ -507,33 +507,25 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     const hitBottom = obj.y > this.app.screen.height - margin;
 
     if (hitLeft || hitRight || hitTop || hitBottom) {
-      if (obj.type === GAME_CONSTANTS.ROCKET) {
-        // Rockets die when hitting walls
-        obj.live = false;
-        this.audioManager.playSound("rocketDeath");
-
-        // Add explosion effect
-        this.createExplosion(obj.x, obj.y);
+      // Skip holes - they don't move and shouldn't die
+      if (obj.type === GAME_CONSTANTS.HOLE) {
         return;
-      } else {
-        // Other objects bounce off walls
-        if (hitLeft) {
-          obj.x = margin;
-          obj.vx = Math.abs(obj.vx) * 0.8;
-        }
-        if (hitRight) {
-          obj.x = this.app.screen.width - margin;
-          obj.vx = -Math.abs(obj.vx) * 0.8;
-        }
-        if (hitTop) {
-          obj.y = margin;
-          obj.vy = Math.abs(obj.vy) * 0.8;
-        }
-        if (hitBottom) {
-          obj.y = this.app.screen.height - margin;
-          obj.vy = -Math.abs(obj.vy) * 0.8;
-        }
       }
+
+      // All movable objects die when hitting walls
+      obj.live = false;
+
+      // Play appropriate death sound
+      if (obj.type === GAME_CONSTANTS.ROCKET) {
+        this.audioManager.playSound("rocketDeath");
+      } else {
+        this.audioManager.playSound("objectDeath");
+      }
+
+      // Add explosion effect with color based on object type
+      const explosionColor =
+        obj.type === GAME_CONSTANTS.ROCKET ? 0xff4444 : 0xffaa44;
+      this.createExplosion(obj.x, obj.y, explosionColor);
     }
   }
 
@@ -681,11 +673,11 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     this.gameState = "running";
   }
 
-  createExplosion(x, y) {
+  createExplosion(x, y, color = 0xff4444) {
     // Create simple explosion effect with particles
     for (let i = 0; i < 8; i++) {
       const particle = new PIXI.Graphics();
-      particle.beginFill(0xff4444);
+      particle.beginFill(color);
       particle.drawCircle(0, 0, 2);
       particle.endFill();
 

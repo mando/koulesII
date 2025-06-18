@@ -29,6 +29,7 @@ export class AudioManager {
       menuSelect: { type: "tone", duration: 0.1, frequency: 800 },
       menuMove: { type: "tone", duration: 0.05, frequency: 600 },
       rocketDeath: { type: "noise", duration: 0.6, frequency: 120 },
+      objectDeath: { type: "noise", duration: 0.4, frequency: 200 },
     };
 
     this.init();
