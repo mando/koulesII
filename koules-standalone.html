@@ -146,6 +146,10 @@
                     <p style="color: #ff4444;">Walls are DEADLY! All objects die on contact!</p>
                     <p>Keep everything away from the edges!</p>
                     <br />
+                    <p><strong>🌌 BLACK HOLES:</strong></p>
+                    <p style="color: #44ff44;">Holes now have gravitational pull!</p>
+                    <p>Use gravity to your advantage, but don't get too close!</p>
+                    <br />
                     <p><strong>General:</strong></p>
                     <p>ESC - Menu</p>
                     <p></p>R - Restart level</p>
@@ -162,7 +166,7 @@
             <div id="controls-info" class="hidden">
                 <div>Player 1: Arrow Keys (thrust) + Space (brake)</div>
                 <div>Player 2: WASD (thrust) + Shift (brake)</div>
-                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL EVERYTHING!</div>
+                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL! | 🌌 HOLES PULL!</div>
             </div>
 
             <div id="game-over" class="menu hidden">
@@ -205,6 +209,11 @@
             const ROCKET_RADIUS = 14;
             const BALL_RADIUS = 8;
             const HOLE_RADIUS = 12;
+
+            // Gravity constants
+            const GRAVITY_STRENGTH = 1000;
+            const MIN_GRAVITY_DISTANCE = 30;
+            const MAX_GRAVITY_DISTANCE = 150;
 
             // Initialize
             document.addEventListener("DOMContentLoaded", initGame);
@@ -401,6 +410,16 @@
 
             function createHole(x, y) {
                 const hole = new PIXI.Graphics();
+
+                // Draw gravity field visualization (faint rings)
+                hole.lineStyle(1, 0x333333, 0.3);
+                hole.drawCircle(0, 0, MIN_GRAVITY_DISTANCE);
+                hole.lineStyle(1, 0x222222, 0.2);
+                hole.drawCircle(0, 0, MIN_GRAVITY_DISTANCE + 30);
+                hole.lineStyle(1, 0x111111, 0.1);
+                hole.drawCircle(0, 0, MIN_GRAVITY_DISTANCE + 60);
+
+                // Draw the hole itself
                 hole.beginFill(0x000000);
                 hole.drawCircle(0, 0, HOLE_RADIUS);
                 hole.endFill();
@@ -427,6 +446,7 @@
                 updatePhysics();
                 checkCollisions();
                 checkGameState();
+                updateGravityEffects();
             }
 
             function processInput() {
@@ -480,6 +500,9 @@
                 gameObjects.forEach((obj) => {
                     if (!obj.live || obj.type === "hole") return;
 
+                    // Apply gravitational forces from holes
+                    applyGravity(obj);
+
                     // Apply forces to acceleration (F = ma, so a = F/m)
                     if (obj.fx !== undefined && obj.fy !== undefined) {
                         const ax = obj.fx / obj.mass;
@@ -509,6 +532,31 @@
 
                     // Keep in bounds
                     keepInBounds(obj);
+                });
+            }
+
+            function applyGravity(obj) {
+                // Apply gravitational pull from all holes
+                holes.forEach((hole) => {
+                    if (!hole.live) return;
+
+                    const dx = hole.x - obj.x;
+                    const dy = hole.y - obj.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Only apply gravity if within range and not too close
+                    if (distance < MAX_GRAVITY_DISTANCE && distance > MIN_GRAVITY_DISTANCE) {
+                        // Calculate gravitational force (simplified physics)
+                        const gravityForce = GRAVITY_STRENGTH / (distance * distance);
+
+                        // Normalize direction vector
+                        const nx = dx / distance;
+                        const ny = dy / distance;
+
+                        // Apply gravity force (add to existing forces)
+                        obj.fx += nx * gravityForce;
+                        obj.fy += ny * gravityForce;
+                    }
                 });
             }
 
@@ -542,6 +590,17 @@
                     const explosionColor = obj.type === "rocket" ? 0xff4444 : 0xffaa44;
                     createExplosion(obj.x, obj.y, explosionColor);
                 }
+            }
+
+            function updateGravityEffects() {
+                // Add subtle pulsing effect to holes to show they're active
+                holes.forEach((hole) => {
+                    if (!hole.live) return;
+
+                    const time = Date.now() * 0.003;
+                    const pulse = 0.8 + 0.2 * Math.sin(time);
+                    hole.alpha = pulse;
+                });
             }
 
             function checkCollisions() {

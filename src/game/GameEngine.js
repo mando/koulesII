@@ -89,6 +89,11 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     this.gravity = 0;
     this.friction = 0.99;
 
+    // Gravity constants
+    this.GRAVITY_STRENGTH = 1000;
+    this.MIN_GRAVITY_DISTANCE = 30;
+    this.MAX_GRAVITY_DISTANCE = 150;
+
     this.init();
   }
 
@@ -319,6 +324,15 @@ export class GameEngine extends PIXI.utils.EventEmitter {
         break;
 
       case GAME_CONSTANTS.HOLE:
+        // Draw gravity field visualization (faint rings)
+        graphics.lineStyle(1, 0x333333, 0.3);
+        graphics.drawCircle(0, 0, this.MIN_GRAVITY_DISTANCE);
+        graphics.lineStyle(1, 0x222222, 0.2);
+        graphics.drawCircle(0, 0, this.MIN_GRAVITY_DISTANCE + 30);
+        graphics.lineStyle(1, 0x111111, 0.1);
+        graphics.drawCircle(0, 0, this.MIN_GRAVITY_DISTANCE + 60);
+
+        // Draw the hole itself
         graphics.beginFill(0x000000);
         graphics.drawCircle(0, 0, obj.radius);
         graphics.endFill();
@@ -409,6 +423,9 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     // Check win/lose conditions
     this.checkGameState();
 
+    // Update gravity effects
+    this.updateGravityEffects();
+
     // Update score display
     this.emit("scoreUpdate", {
       score: this.score,
@@ -457,6 +474,9 @@ export class GameEngine extends PIXI.utils.EventEmitter {
   updatePhysics() {
     this.objects.forEach((obj) => {
       if (!obj.live) return;
+
+      // Apply gravitational forces from holes
+      this.applyGravity(obj);
 
       // Apply forces to acceleration (F = ma, so a = F/m)
       if (obj.fx !== undefined && obj.fy !== undefined) {
@@ -671,6 +691,50 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     this.clearGame();
     this.initLevel();
     this.gameState = "running";
+  }
+
+  applyGravity(obj) {
+    // Skip holes - they don't get affected by gravity
+    if (obj.type === GAME_CONSTANTS.HOLE) return;
+
+    // Apply gravitational pull from all holes
+    this.objects.forEach((hole) => {
+      if (!hole.live || hole.type !== GAME_CONSTANTS.HOLE) return;
+
+      const dx = hole.x - obj.x;
+      const dy = hole.y - obj.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Only apply gravity if within range and not too close
+      if (
+        distance < this.MAX_GRAVITY_DISTANCE &&
+        distance > this.MIN_GRAVITY_DISTANCE
+      ) {
+        // Calculate gravitational force (simplified physics)
+        const gravityForce = this.GRAVITY_STRENGTH / (distance * distance);
+
+        // Normalize direction vector
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        // Apply gravity force (add to existing forces)
+        obj.fx += nx * gravityForce;
+        obj.fy += ny * gravityForce;
+      }
+    });
+  }
+
+  updateGravityEffects() {
+    // Add subtle pulsing effect to holes to show they're active
+    this.objects.forEach((obj) => {
+      if (!obj.live || obj.type !== GAME_CONSTANTS.HOLE) return;
+
+      const time = Date.now() * 0.003;
+      const pulse = 0.8 + 0.2 * Math.sin(time);
+      if (obj.sprite) {
+        obj.sprite.alpha = pulse;
+      }
+    });
   }
 
   createExplosion(x, y, color = 0xff4444) {
