@@ -148,7 +148,8 @@
                     <br />
                     <p><strong>🌌 BLACK HOLES:</strong></p>
                     <p style="color: #44ff44;">Holes now have gravitational pull!</p>
-                    <p>Use gravity to your advantage, but don't get too close!</p>
+                    <p style="color: #ff4444;">⚠️ DEADLY TO ROCKETS! Getting pulled in = DEATH!</p>
+                    <p></p>Use gravity to your advantage, but don't get too close!</p>
                     <br />
                     <p><strong>General:</strong></p>
                     <p>ESC - Menu</p>
@@ -166,7 +167,7 @@
             <div id="controls-info" class="hidden">
                 <div>Player 1: Arrow Keys (thrust) + Space (brake)</div>
                 <div>Player 2: WASD (thrust) + Shift (brake)</div>
-                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL! | 🌌 HOLES PULL!</div>
+                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL! | 🌌 HOLES KILL ROCKETS!</div>
             </div>
 
             <div id="game-over" class="menu hidden">
@@ -624,7 +625,7 @@
             }
 
             function handleCollision(obj1, obj2, dx, dy, distance) {
-                // Special case: ball into hole
+                // Special case: ball into hole (scoring)
                 if (
                     (obj1.type === "ball" && obj2.type === "hole") ||
                     (obj2.type === "ball" && obj1.type === "hole")
@@ -634,6 +635,21 @@
                     ball.visible = false;
                     score += 10;
                     playSound("ballInHole");
+                    return;
+                }
+
+                // Special case: rocket into hole (death)
+                if (
+                    (obj1.type === "rocket" && obj2.type === "hole") ||
+                    (obj2.type === "rocket" && obj1.type === "hole")
+                ) {
+                    const rocket = obj1.type === "rocket" ? obj1 : obj2;
+                    const hole = obj1.type === "hole" ? obj1 : obj2;
+
+                    rocket.live = false;
+                    rocket.visible = false;
+                    playSound("rocketDeath");
+                    createExplosion(rocket.x, rocket.y, 0xff4444);
                     return;
                 }
 

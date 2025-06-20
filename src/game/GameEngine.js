@@ -606,7 +606,7 @@ export class GameEngine extends PIXI.utils.EventEmitter {
   }
 
   handleSpecialCollisions(obj1, obj2) {
-    // Ball into hole
+    // Ball into hole (scoring)
     if (
       (obj1.type === GAME_CONSTANTS.BALL &&
         obj2.type === GAME_CONSTANTS.HOLE) ||
@@ -616,6 +616,22 @@ export class GameEngine extends PIXI.utils.EventEmitter {
       ball.live = false;
       this.score += 10;
       this.audioManager.playSound("ballInHole");
+      return;
+    }
+
+    // Rocket into hole (death)
+    if (
+      (obj1.type === GAME_CONSTANTS.ROCKET &&
+        obj2.type === GAME_CONSTANTS.HOLE) ||
+      (obj2.type === GAME_CONSTANTS.ROCKET && obj1.type === GAME_CONSTANTS.HOLE)
+    ) {
+      const rocket = obj1.type === GAME_CONSTANTS.ROCKET ? obj1 : obj2;
+      const hole = obj1.type === GAME_CONSTANTS.HOLE ? obj1 : obj2;
+
+      rocket.live = false;
+      this.audioManager.playSound("rocketDeath");
+      this.createExplosion(rocket.x, rocket.y, 0xff4444);
+      return;
     }
 
     // Rocket collision damage
