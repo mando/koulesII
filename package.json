@@ -1,7 +1,7 @@
 {
-  "name": "koules-pixijs",
+  "name": "koulesii",
   "version": "1.0.0",
-  "description": "Koules game reimplemented in Pixi.js - A physics-based space game",
+  "description": "KoulesII - Enhanced physics-based space game with deadly walls and gravitational black holes",
   "main": "src/index.js",
   "scripts": {
     "dev": "vite",
@@ -12,12 +12,15 @@
   "keywords": [
     "game",
     "pixijs",
+    "koulesii",
     "koules",
     "physics",
     "space",
-    "arcade"
+    "arcade",
+    "gravity",
+    "blackholes"
   ],
-  "author": "Converted from original Koules by Jan Hubicka",
+  "author": "KoulesII - Enhanced version based on original Koules by Jan Hubicka",
   "license": "GPL-2.0",
   "devDependencies": {
     "vite": "^6.3.5"
