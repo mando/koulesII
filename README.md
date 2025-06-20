@@ -68,17 +68,12 @@ KoulesII is an enhanced version of the classic fast-paced physics-based space ga
 - Node.js 14+ and npm
 
 ### Setup
-1. Navigate to the project directory:
-   ```bash
-   cd mac-koules/koules-pixijs
-   ```
-
-2. Install dependencies:
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Start the development server:
+2. Start the development server:
    ```bash
    npm run dev
    ```
@@ -254,5 +249,3 @@ This project maintains the original GPL-2.0 license from the original Koules gam
 Special thanks to Jan Hubicka for creating the original Koules game and making it freely available. KoulesII builds upon the brilliant foundation of the original while adding extreme challenges and enhanced physics that push the gameplay to new levels of difficulty.
 
 The original game inspired a generation of indie game developers and remains a classic example of physics-based gameplay done right. KoulesII honors that legacy while creating an almost impossibly challenging experience that demands absolute precision and strategic thinking.
-
-**Warning**: KoulesII is significantly more difficult than the original Koules. The combination of deadly walls, gravitational black holes, and acceleration-based controls creates an extremely punishing but rewarding gameplay experience.
