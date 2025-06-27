@@ -44,16 +44,6 @@
                 line-height: 1.4;
             }
 
-            .loading {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: #00ffff;
-                font-size: 18px;
-                z-index: 200;
-            }
-
             .menu {
                 position: absolute;
                 top: 50%;
@@ -62,9 +52,10 @@
                 color: #00ffff;
                 text-align: center;
                 z-index: 200;
-                background: rgba(0, 0, 0, 0.8);
+                background: rgba(0, 0, 0, 0.9);
                 padding: 20px;
                 border: 1px solid #00ffff;
+                border-radius: 5px;
             }
 
             .menu h1 {
@@ -83,6 +74,8 @@
                 font-family: inherit;
                 font-size: 14px;
                 transition: all 0.3s;
+                display: block;
+                width: 200px;
             }
 
             .menu button:hover {
@@ -94,79 +87,839 @@
             .hidden {
                 display: none;
             }
+
+            #game-over {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #ff4444;
+                text-align: center;
+                z-index: 200;
+                background: rgba(0, 0, 0, 0.9);
+                padding: 20px;
+                border: 2px solid #ff4444;
+                border-radius: 5px;
+            }
+
+            #level-complete {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #44ff44;
+                text-align: center;
+                z-index: 200;
+                background: rgba(0, 0, 0, 0.9);
+                padding: 20px;
+                border: 2px solid #44ff44;
+                border-radius: 5px;
+            }
         </style>
     </head>
     <body>
         <div id="game-container">
-            <div id="loading" class="loading">Loading Koules...</div>
-
-            <div id="main-menu" class="menu hidden">
+            <div id="main-menu" class="menu">
                 <h1>K O U L E S I I</h1>
-                <p>
-                    Enhanced physics-based space game with deadly walls &
-                    gravitational black holes
-                </p>
-                <button id="start-single">Single Player</button>
-                <button id="start-multi">Multi Player (2-5 players)</button>
-                <button id="show-controls">Controls</button>
+                <p>Enhanced physics-based space game with deadly walls & gravitational black holes</p>
+                <button onclick="startGame(1)">Single Player</button>
+                <button onclick="startGame(2)">Two Players</button>
+                <button onclick="showControls()">Controls</button>
             </div>
 
             <div id="controls-menu" class="menu hidden">
                 <h1>KoulesII Controls</h1>
-                <div style="text-align: left">
-                    <p><strong>Player 1:</strong></p>
+                <div style="text-align: left; margin: 20px 0">
+                    <p><strong>Player 1 (Blue):</strong></p>
                     <p>Arrow Keys - Apply thrust</p>
                     <p>Space - Brake/Reverse thrust</p>
                     <br />
-                    <p><strong>Player 2:</strong></p>
+                    <p><strong>Player 2 (Red):</strong></p>
                     <p>WASD - Apply thrust</p>
-                    <p>Left Shift - Brake/Reverse thrust</p>
+                    <p>Shift - Brake/Reverse thrust</p>
                     <br />
                     <p><strong>Physics:</strong></p>
-                    <p>Controls use realistic acceleration!</p>
+                    <p>Controls now use realistic acceleration!</p>
                     <p>Build momentum and use inertia strategically</p>
                     <br />
                     <p><strong>⚠️ DANGER ZONE:</strong></p>
-                    <p style="color: #ff4444">
-                        Walls are DEADLY! All objects die on contact!
-                    </p>
+                    <p style="color: #ff4444;">Walls are DEADLY! All objects die on contact!</p>
                     <p>Keep everything away from the edges!</p>
                     <br />
                     <p><strong>🌌 BLACK HOLES:</strong></p>
-                    <p style="color: #44ff44">
-                        Holes now have gravitational pull!
-                    </p>
-                    <p style="color: #ff4444">
-                        ⚠️ DEADLY TO ROCKETS! Getting pulled in = DEATH!
-                    </p>
-                    <p>
-                        Use gravity to your advantage, but don't get too close!
-                    </p>
+                    <p style="color: #44ff44;">Holes now have gravitational pull!</p>
+                    <p style="color: #ff4444;">⚠️ DEADLY TO ROCKETS! Getting pulled in = DEATH!</p>
+                    <p></p>Use gravity to your advantage, but don't get too close!</p>
                     <br />
                     <p><strong>General:</strong></p>
                     <p>ESC - Menu</p>
-                    <p>R - Restart level</p>
+                    <p></p>R - Restart level</p>
                 </div>
-                <button id="back-to-menu">Back to Menu</button>
+                <button onclick="showMainMenu()">Back to Menu</button>
             </div>
 
             <div id="ui-overlay" class="hidden">
-                <div id="score">Score: 0</div>
-                <div id="level">Level: 1</div>
-                <div id="lives">Lives: 3</div>
-                <div id="players-info"></div>
+                <div>Score: <span id="score">0</span></div>
+                <div>Level: <span id="level">1</span></div>
+                <div>Lives: <span id="lives">3</span></div>
             </div>
 
             <div id="controls-info" class="hidden">
                 <div>Player 1: Arrow Keys (thrust) + Space (brake)</div>
                 <div>Player 2: WASD (thrust) + Shift (brake)</div>
-                <div>
-                    ESC: Menu | R: Restart | ⚠️ WALLS KILL! | 🌌 HOLES KILL
-                    ROCKETS!
-                </div>
+                <div>ESC: Menu | R: Restart | ⚠️ WALLS KILL! | 🌌 HOLES KILL ROCKETS!</div>
+            </div>
+
+            <div id="game-over" class="menu hidden">
+                <h1>GAME OVER</h1>
+                <p>Final Score: <span id="final-score">0</span></p>
+                <button onclick="showMainMenu()">Main Menu</button>
+                <button onclick="restartGame()">Play Again</button>
+            </div>
+
+            <div id="level-complete" class="menu hidden">
+                <h1>LEVEL COMPLETE!</h1>
+                <p>Score: <span id="level-score">0</span></p>
+                <button onclick="nextLevel()">Next Level</button>
+                <button onclick="showMainMenu()">Main Menu</button>
             </div>
         </div>
 
-        <script type="module" src="src/main.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
+        <script>
+            // Game state
+            let app = null;
+            let gameState = "menu"; // menu, playing, paused, gameOver
+            let currentLevel = 1;
+            let score = 0;
+            let lives = 3;
+            let playerCount = 1;
+
+            // Game objects
+            let gameObjects = [];
+            let rockets = [];
+            let balls = [];
+            let holes = [];
+
+            // Input handling
+            let keys = {};
+
+            // Game constants
+            const GAME_WIDTH = 800;
+            const GAME_HEIGHT = 600;
+            const ROCKET_RADIUS = 14;
+            const BALL_RADIUS = 8;
+            const HOLE_RADIUS = 12;
+
+            // Gravity constants
+            const GRAVITY_STRENGTH = 1000;
+            const MIN_GRAVITY_DISTANCE = 30;
+            const MAX_GRAVITY_DISTANCE = 150;
+
+            // Initialize
+            document.addEventListener("DOMContentLoaded", initGame);
+
+            // Input handling
+            document.addEventListener("keydown", (e) => {
+                keys[e.key] = true;
+
+                if (e.key === "Escape") {
+                    if (gameState === "playing") {
+                        pauseGame();
+                    } else if (gameState === "paused") {
+                        resumeGame();
+                    }
+                } else if (e.key === "r" || e.key === "R") {
+                    if (gameState === "playing") {
+                        restartLevel();
+                    }
+                }
+
+                // Prevent default for game keys
+                if (
+                    [
+                        "ArrowUp",
+                        "ArrowDown",
+                        "ArrowLeft",
+                        "ArrowRight",
+                        " ",
+                        "w",
+                        "a",
+                        "s",
+                        "d",
+                        "Shift",
+                    ].includes(e.key)
+                ) {
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener("keyup", (e) => {
+                keys[e.key] = false;
+            });
+
+            async function initGame() {
+                // Initialize Pixi.js
+                app = new PIXI.Application({
+                    width: GAME_WIDTH,
+                    height: GAME_HEIGHT,
+                    backgroundColor: 0x000011,
+                    antialias: true,
+                });
+
+                document.getElementById("game-container").appendChild(app.view);
+
+                // Create background
+                createBackground();
+
+                // Start game loop
+                app.ticker.add(gameLoop);
+
+                console.log("KoulesII initialized");
+            }
+
+            function createBackground() {
+                const bg = new PIXI.Graphics();
+                bg.beginFill(0x000011);
+                bg.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                bg.endFill();
+
+                // Add stars
+                for (let i = 0; i < 50; i++) {
+                    const star = new PIXI.Graphics();
+                    star.beginFill(0x444444);
+                    star.drawCircle(0, 0, Math.random() * 2 + 1);
+                    star.endFill();
+                    star.x = Math.random() * GAME_WIDTH;
+                    star.y = Math.random() * GAME_HEIGHT;
+                    bg.addChild(star);
+                }
+
+                app.stage.addChild(bg);
+            }
+
+            function startGame(players) {
+                playerCount = players;
+                currentLevel = 1;
+                score = 0;
+                lives = 3;
+
+                hideAllMenus();
+                showGameUI();
+
+                initLevel();
+                gameState = "playing";
+
+                playSound("gameStart");
+            }
+
+            function initLevel() {
+                clearGameObjects();
+
+                // Create rockets
+                const positions = [
+                    { x: 100, y: 300 },
+                    { x: 700, y: 300 },
+                ];
+
+                for (let i = 0; i < playerCount; i++) {
+                    createRocket(positions[i].x, positions[i].y, i);
+                }
+
+                // Create balls
+                const ballCount = Math.min(8 + currentLevel, 15);
+                for (let i = 0; i < ballCount; i++) {
+                    createBall(
+                        100 + Math.random() * (GAME_WIDTH - 200),
+                        100 + Math.random() * (GAME_HEIGHT - 200),
+                    );
+                }
+
+                // Create holes
+                const holeCount = Math.min(2 + Math.floor(currentLevel / 2), 4);
+                for (let i = 0; i < holeCount; i++) {
+                    createHole(
+                        50 + Math.random() * (GAME_WIDTH - 100),
+                        50 + Math.random() * (GAME_HEIGHT - 100),
+                    );
+                }
+
+                updateUI();
+            }
+
+            function createRocket(x, y, playerId) {
+                const colors = [
+                    0x0088ff, 0xff4444, 0x44ff44, 0xffff44, 0xff44ff,
+                ];
+                const rocket = new PIXI.Graphics();
+
+                rocket.beginFill(colors[playerId]);
+                rocket.moveTo(0, -ROCKET_RADIUS);
+                rocket.lineTo(-ROCKET_RADIUS * 0.7, ROCKET_RADIUS * 0.7);
+                rocket.lineTo(ROCKET_RADIUS * 0.7, ROCKET_RADIUS * 0.7);
+                rocket.closePath();
+                rocket.endFill();
+
+                rocket.lineStyle(2, 0x00ffff);
+                rocket.moveTo(0, ROCKET_RADIUS * 0.7);
+                rocket.lineTo(0, ROCKET_RADIUS * 1.2);
+
+                rocket.x = x;
+                rocket.y = y;
+                rocket.vx = 0;
+                rocket.vy = 0;
+                rocket.fx = 0;
+                rocket.fy = 0;
+                rocket.playerId = playerId;
+                rocket.type = "rocket";
+                rocket.radius = ROCKET_RADIUS;
+                rocket.mass = 4;
+                rocket.live = true;
+
+                app.stage.addChild(rocket);
+                gameObjects.push(rocket);
+                rockets.push(rocket);
+
+                return rocket;
+            }
+
+            function createBall(x, y) {
+                const ball = new PIXI.Graphics();
+                ball.beginFill(0x888888);
+                ball.drawCircle(0, 0, BALL_RADIUS);
+                ball.endFill();
+                ball.lineStyle(1, 0xaaaaaa);
+                ball.drawCircle(0, 0, BALL_RADIUS);
+
+                ball.x = x;
+                ball.y = y;
+                ball.vx = (Math.random() - 0.5) * 2;
+                ball.vy = (Math.random() - 0.5) * 2;
+                ball.fx = 0;
+                ball.fy = 0;
+                ball.type = "ball";
+                ball.radius = BALL_RADIUS;
+                ball.mass = 3;
+                ball.live = true;
+
+                app.stage.addChild(ball);
+                gameObjects.push(ball);
+                balls.push(ball);
+
+                return ball;
+            }
+
+            function createHole(x, y) {
+                const hole = new PIXI.Graphics();
+
+                // Draw gravity field visualization (faint rings)
+                hole.lineStyle(1, 0x333333, 0.3);
+                hole.drawCircle(0, 0, MIN_GRAVITY_DISTANCE);
+                hole.lineStyle(1, 0x222222, 0.2);
+                hole.drawCircle(0, 0, MIN_GRAVITY_DISTANCE + 30);
+                hole.lineStyle(1, 0x111111, 0.1);
+                hole.drawCircle(0, 0, MIN_GRAVITY_DISTANCE + 60);
+
+                // Draw the hole itself
+                hole.beginFill(0x000000);
+                hole.drawCircle(0, 0, HOLE_RADIUS);
+                hole.endFill();
+                hole.lineStyle(2, 0x404040);
+                hole.drawCircle(0, 0, HOLE_RADIUS);
+
+                hole.x = x;
+                hole.y = y;
+                hole.type = "hole";
+                hole.radius = HOLE_RADIUS;
+                hole.live = true;
+
+                app.stage.addChild(hole);
+                gameObjects.push(hole);
+                holes.push(hole);
+
+                return hole;
+            }
+
+            function gameLoop() {
+                if (gameState !== "playing") return;
+
+                processInput();
+                updatePhysics();
+                checkCollisions();
+                checkGameState();
+                updateGravityEffects();
+            }
+
+            function processInput() {
+                rockets.forEach((rocket) => {
+                    if (!rocket.live) return;
+
+                    // Reset forces
+                    rocket.fx = 0;
+                    rocket.fy = 0;
+
+                    const thrustForce = 0.8;
+                    const brakeForce = 0.95;
+
+                    if (rocket.playerId === 0) {
+                        // Player 1 - Arrow keys
+                        if (keys["ArrowUp"]) rocket.fy -= thrustForce;
+                        if (keys["ArrowDown"]) rocket.fy += thrustForce;
+                        if (keys["ArrowLeft"]) rocket.fx -= thrustForce;
+                        if (keys["ArrowRight"]) rocket.fx += thrustForce;
+                        if (keys[" "]) {
+                            // Apply braking force opposite to current velocity
+                            rocket.fx -= rocket.vx * 0.1;
+                            rocket.fy -= rocket.vy * 0.1;
+                            rocket.vx *= brakeForce;
+                            rocket.vy *= brakeForce;
+                        }
+                    } else if (rocket.playerId === 1) {
+                        // Player 2 - WASD
+                        if (keys["w"]) rocket.fy -= thrustForce;
+                        if (keys["s"]) rocket.fy += thrustForce;
+                        if (keys["a"]) rocket.fx -= thrustForce;
+                        if (keys["d"]) rocket.fx += thrustForce;
+                        if (keys["Shift"]) {
+                            // Apply braking force opposite to current velocity
+                            rocket.fx -= rocket.vx * 0.1;
+                            rocket.fy -= rocket.vy * 0.1;
+                            rocket.vx *= brakeForce;
+                            rocket.vy *= brakeForce;
+                        }
+                    }
+
+                    // Update rotation based on thrust direction
+                    if (rocket.fx !== 0 || rocket.fy !== 0) {
+                        rocket.rotation =
+                            Math.atan2(rocket.fy, rocket.fx) + Math.PI / 2;
+                    }
+                });
+            }
+
+            function updatePhysics() {
+                gameObjects.forEach((obj) => {
+                    if (!obj.live || obj.type === "hole") return;
+
+                    // Apply gravitational forces from holes
+                    applyGravity(obj);
+
+                    // Apply forces to acceleration (F = ma, so a = F/m)
+                    if (obj.fx !== undefined && obj.fy !== undefined) {
+                        const ax = obj.fx / obj.mass;
+                        const ay = obj.fy / obj.mass;
+
+                        // Update velocity with acceleration
+                        obj.vx += ax;
+                        obj.vy += ay;
+                    }
+
+                    // Apply friction/drag
+                    const friction = obj.type === "rocket" ? 0.98 : 0.995;
+                    obj.vx *= friction;
+                    obj.vy *= friction;
+
+                    // Cap maximum velocity to prevent runaway speeds
+                    const maxVel = obj.type === "rocket" ? 8 : 6;
+                    const vel = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+                    if (vel > maxVel) {
+                        obj.vx = (obj.vx / vel) * maxVel;
+                        obj.vy = (obj.vy / vel) * maxVel;
+                    }
+
+                    // Update position
+                    obj.x += obj.vx;
+                    obj.y += obj.vy;
+
+                    // Keep in bounds
+                    keepInBounds(obj);
+                });
+            }
+
+            function applyGravity(obj) {
+                // Apply gravitational pull from all holes
+                holes.forEach((hole) => {
+                    if (!hole.live) return;
+
+                    const dx = hole.x - obj.x;
+                    const dy = hole.y - obj.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Only apply gravity if within range and not too close
+                    if (distance < MAX_GRAVITY_DISTANCE && distance > MIN_GRAVITY_DISTANCE) {
+                        // Calculate gravitational force (simplified physics)
+                        const gravityForce = GRAVITY_STRENGTH / (distance * distance);
+
+                        // Normalize direction vector
+                        const nx = dx / distance;
+                        const ny = dy / distance;
+
+                        // Apply gravity force (add to existing forces)
+                        obj.fx += nx * gravityForce;
+                        obj.fy += ny * gravityForce;
+                    }
+                });
+            }
+
+            function keepInBounds(obj) {
+                const margin = obj.radius;
+
+                // Check for boundary collision
+                const hitLeft = obj.x < margin;
+                const hitRight = obj.x > GAME_WIDTH - margin;
+                const hitTop = obj.y < margin;
+                const hitBottom = obj.y > GAME_HEIGHT - margin;
+
+                if (hitLeft || hitRight || hitTop || hitBottom) {
+                    // Skip holes - they don't move and shouldn't die
+                    if (obj.type === "hole") {
+                        return;
+                    }
+
+                    // All movable objects die when hitting walls
+                    obj.live = false;
+                    obj.visible = false;
+
+                    // Play appropriate death sound
+                    if (obj.type === "rocket") {
+                        playSound("rocketDeath");
+                    } else {
+                        playSound("objectDeath");
+                    }
+
+                    // Add explosion effect with color based on object type
+                    const explosionColor = obj.type === "rocket" ? 0xff4444 : 0xffaa44;
+                    createExplosion(obj.x, obj.y, explosionColor);
+                }
+            }
+
+            function updateGravityEffects() {
+                // Add subtle pulsing effect to holes to show they're active
+                holes.forEach((hole) => {
+                    if (!hole.live) return;
+
+                    const time = Date.now() * 0.003;
+                    const pulse = 0.8 + 0.2 * Math.sin(time);
+                    hole.alpha = pulse;
+                });
+            }
+
+            function checkCollisions() {
+                for (let i = 0; i < gameObjects.length; i++) {
+                    for (let j = i + 1; j < gameObjects.length; j++) {
+                        const obj1 = gameObjects[i];
+                        const obj2 = gameObjects[j];
+
+                        if (!obj1.live || !obj2.live) continue;
+
+                        const dx = obj2.x - obj1.x;
+                        const dy = obj2.y - obj1.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const minDistance = obj1.radius + obj2.radius;
+
+                        if (distance < minDistance) {
+                            handleCollision(obj1, obj2, dx, dy, distance);
+                        }
+                    }
+                }
+            }
+
+            function handleCollision(obj1, obj2, dx, dy, distance) {
+                // Special case: ball into hole (scoring)
+                if (
+                    (obj1.type === "ball" && obj2.type === "hole") ||
+                    (obj2.type === "ball" && obj1.type === "hole")
+                ) {
+                    const ball = obj1.type === "ball" ? obj1 : obj2;
+                    ball.live = false;
+                    ball.visible = false;
+                    score += 10;
+                    playSound("ballInHole");
+                    return;
+                }
+
+                // Special case: rocket into hole (death)
+                if (
+                    (obj1.type === "rocket" && obj2.type === "hole") ||
+                    (obj2.type === "rocket" && obj1.type === "hole")
+                ) {
+                    const rocket = obj1.type === "rocket" ? obj1 : obj2;
+                    const hole = obj1.type === "hole" ? obj1 : obj2;
+
+                    rocket.live = false;
+                    rocket.visible = false;
+                    playSound("rocketDeath");
+                    createExplosion(rocket.x, rocket.y, 0xff4444);
+                    return;
+                }
+
+                // Skip hole collisions (except ball-hole above)
+                if (obj1.type === "hole" || obj2.type === "hole") return;
+
+                // Normalize collision vector
+                const nx = dx / distance;
+                const ny = dy / distance;
+
+                // Separate objects
+                const overlap = (obj1.radius + obj2.radius - distance) / 2;
+                obj1.x -= nx * overlap;
+                obj1.y -= ny * overlap;
+                obj2.x += nx * overlap;
+                obj2.y += ny * overlap;
+
+                // Calculate relative velocity
+                const dvx = obj2.vx - obj1.vx;
+                const dvy = obj2.vy - obj1.vy;
+                const dvn = dvx * nx + dvy * ny;
+
+                // Don't resolve if velocities are separating
+                if (dvn > 0) return;
+
+                // Calculate collision impulse
+                const impulse = (2 * dvn) / (obj1.mass + obj2.mass);
+
+                // Apply impulse
+                obj1.vx += impulse * obj2.mass * nx;
+                obj1.vy += impulse * obj2.mass * ny;
+                obj2.vx -= impulse * obj1.mass * nx;
+                obj2.vy -= impulse * obj1.mass * ny;
+
+                playSound("collision");
+            }
+
+            function checkGameState() {
+                // Check if all balls are destroyed
+                const aliveBalls = balls.filter((ball) => ball.live);
+                if (aliveBalls.length === 0) {
+                    levelComplete();
+                    return;
+                }
+
+                // Check if all rockets are destroyed
+                const aliveRockets = rockets.filter((rocket) => rocket.live);
+                if (aliveRockets.length === 0) {
+                    lives--;
+                    if (lives <= 0) {
+                        gameOver();
+                    } else {
+                        restartLevel();
+                    }
+                }
+            }
+
+            function levelComplete() {
+                gameState = "menu";
+                document.getElementById("level-score").textContent = score;
+                document
+                    .getElementById("level-complete")
+                    .classList.remove("hidden");
+                playSound("levelComplete");
+            }
+
+            function gameOver() {
+                gameState = "menu";
+                document.getElementById("final-score").textContent = score;
+                document.getElementById("game-over").classList.remove("hidden");
+                playSound("gameOver");
+            }
+
+            function nextLevel() {
+                currentLevel++;
+                document
+                    .getElementById("level-complete")
+                    .classList.add("hidden");
+                initLevel();
+                gameState = "playing";
+            }
+
+            function restartLevel() {
+                initLevel();
+                gameState = "playing";
+            }
+
+            function restartGame() {
+                document.getElementById("game-over").classList.add("hidden");
+                startGame(playerCount);
+            }
+
+            function pauseGame() {
+                gameState = "paused";
+                showMainMenu();
+            }
+
+            function resumeGame() {
+                gameState = "playing";
+                hideAllMenus();
+                showGameUI();
+            }
+
+            function clearGameObjects() {
+                gameObjects.forEach((obj) => {
+                    if (obj.parent) {
+                        obj.parent.removeChild(obj);
+                    }
+                });
+
+                gameObjects = [];
+                rockets = [];
+                balls = [];
+                holes = [];
+            }
+
+            function updateUI() {
+                document.getElementById("score").textContent = score;
+                document.getElementById("level").textContent = currentLevel;
+                document.getElementById("lives").textContent = lives;
+            }
+
+            function showMainMenu() {
+                hideAllMenus();
+                document.getElementById("main-menu").classList.remove("hidden");
+                document.getElementById("ui-overlay").classList.add("hidden");
+                document
+                    .getElementById("controls-info")
+                    .classList.add("hidden");
+            }
+
+            function showControls() {
+                hideAllMenus();
+                document
+                    .getElementById("controls-menu")
+                    .classList.remove("hidden");
+            }
+
+            function showGameUI() {
+                document
+                    .getElementById("ui-overlay")
+                    .classList.remove("hidden");
+                document
+                    .getElementById("controls-info")
+                    .classList.remove("hidden");
+            }
+
+            function createExplosion(x, y, color = 0xff4444) {
+                // Create simple explosion effect with particles
+                for (let i = 0; i < 8; i++) {
+                    const particle = new PIXI.Graphics();
+                    particle.beginFill(color);
+                    particle.drawCircle(0, 0, 2);
+                    particle.endFill();
+
+                    particle.x = x;
+                    particle.y = y;
+
+                    const angle = (i / 8) * Math.PI * 2;
+                    const speed = 2 + Math.random() * 3;
+                    particle.vx = Math.cos(angle) * speed;
+                    particle.vy = Math.sin(angle) * speed;
+                    particle.life = 30; // frames to live
+
+                    app.stage.addChild(particle);
+
+                    // Animate particle
+                    const animateParticle = () => {
+                        particle.life--;
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vx *= 0.95;
+                        particle.vy *= 0.95;
+                        particle.alpha = particle.life / 30;
+
+                        if (particle.life <= 0) {
+                            app.stage.removeChild(particle);
+                        } else {
+                            requestAnimationFrame(animateParticle);
+                        }
+                    };
+                    animateParticle();
+                }
+            }
+
+            function hideAllMenus() {
+                document.getElementById("main-menu").classList.add("hidden");
+                document
+                    .getElementById("controls-menu")
+                    .classList.add("hidden");
+                document.getElementById("game-over").classList.add("hidden");
+                document
+                    .getElementById("level-complete")
+                    .classList.add("hidden");
+            }
+
+            // Simple sound effects using Web Audio API
+            let audioContext = null;
+
+            function initAudio() {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext ||
+                        window.webkitAudioContext)();
+                }
+            }
+
+            function playSound(type) {
+                try {
+                    initAudio();
+
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    let frequency = 440;
+                    let duration = 0.1;
+
+                    switch (type) {
+                        case "collision":
+                            frequency = 150;
+                            duration = 0.1;
+                            break;
+                        case "ballInHole":
+                            frequency = 440;
+                            duration = 0.3;
+                            break;
+                        case "gameStart":
+                            frequency = 523.25;
+                            duration = 0.5;
+                            break;
+                        case "gameOver":
+                            frequency = 220;
+                            duration = 1.0;
+                            break;
+                        case "levelComplete":
+                            frequency = 659.25;
+                            duration = 0.8;
+                            break;
+                        case "rocketDeath":
+                            frequency = 120;
+                            duration = 0.6;
+                            break;
+                        case "objectDeath":
+                            frequency = 200;
+                            duration = 0.4;
+                            break;
+                    }
+
+                    oscillator.frequency.setValueAtTime(
+                        frequency,
+                        audioContext.currentTime,
+                    );
+                    oscillator.type = "square";
+
+                    const now = audioContext.currentTime;
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(
+                        0.01,
+                        now + duration,
+                    );
+
+                    oscillator.start(now);
+                    oscillator.stop(now + duration);
+                } catch (error) {
+                    console.warn("Audio not available:", error);
+                }
+            }
+        </script>
     </body>
 </html>
