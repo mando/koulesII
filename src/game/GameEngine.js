@@ -621,11 +621,15 @@ export class GameEngine extends PIXI.utils.EventEmitter {
       obj.live = false;
 
       // Award points for destroying balls
-      if (
-        obj.type === GAME_CONSTANTS.BALL_SMALL ||
-        obj.type === GAME_CONSTANTS.BALL_LARGE
-      ) {
-        this.score += 5; // 5 points for wall destruction (less than hole scoring)
+      if (obj.type === GAME_CONSTANTS.BALL_SMALL) {
+        this.score += 5; // 5 points for small ball wall destruction
+        this.emit("scoreUpdate", {
+          score: this.score,
+          level: this.level,
+          lives: this.lives,
+        });
+      } else if (obj.type === GAME_CONSTANTS.BALL_LARGE) {
+        this.score += 10; // 10 points for large ball wall destruction (2x small)
         this.emit("scoreUpdate", {
           score: this.score,
           level: this.level,
@@ -719,7 +723,12 @@ export class GameEngine extends PIXI.utils.EventEmitter {
           ? obj1
           : obj2;
       ball.live = false;
-      this.score += 10; // 10 points for hole scoring (more than wall destruction)
+      // Award points based on ball size
+      if (ball.type === GAME_CONSTANTS.BALL_SMALL) {
+        this.score += 10; // 10 points for small ball hole scoring
+      } else if (ball.type === GAME_CONSTANTS.BALL_LARGE) {
+        this.score += 20; // 20 points for large ball hole scoring (2x small)
+      }
       this.emit("scoreUpdate", {
         score: this.score,
         level: this.level,

@@ -644,8 +644,11 @@
                     obj.visible = false;
 
                     // Award points for destroying balls
-                    if (obj.type === "ball_small" || obj.type === "ball_large") {
-                        score += 5; // 5 points for wall destruction (less than hole scoring)
+                    if (obj.type === "ball_small") {
+                        score += 5; // 5 points for small ball wall destruction
+                        updateUI();
+                    } else if (obj.type === "ball_large") {
+                        score += 10; // 10 points for large ball wall destruction (2x small)
                         updateUI();
                     }
 
@@ -702,7 +705,12 @@
                     const ball = (obj1.type === "ball_small" || obj1.type === "ball_large") ? obj1 : obj2;
                     ball.live = false;
                     ball.visible = false;
-                    score += 10; // 10 points for hole scoring (more than wall destruction)
+                    // Award points based on ball size
+                    if (ball.type === "ball_small") {
+                        score += 10; // 10 points for small ball hole scoring
+                    } else if (ball.type === "ball_large") {
+                        score += 20; // 20 points for large ball hole scoring (2x small)
+                    }
                     updateUI();
                     playSound("ballInHole");
                     return;
