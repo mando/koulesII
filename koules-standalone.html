@@ -643,6 +643,12 @@
                     obj.live = false;
                     obj.visible = false;
 
+                    // Award points for destroying balls
+                    if (obj.type === "ball_small" || obj.type === "ball_large") {
+                        score += 5; // 5 points for wall destruction (less than hole scoring)
+                        updateUI();
+                    }
+
                     // Play appropriate death sound
                     if (obj.type === "rocket") {
                         playSound("rocketDeath");
@@ -690,13 +696,14 @@
             function handleCollision(obj1, obj2, dx, dy, distance) {
                 // Special case: ball into hole (scoring)
                 if (
-                    (obj1.type === "ball" && obj2.type === "hole") ||
-                    (obj2.type === "ball" && obj1.type === "hole")
+                    ((obj1.type === "ball_small" || obj1.type === "ball_large") && obj2.type === "hole") ||
+                    ((obj2.type === "ball_small" || obj2.type === "ball_large") && obj1.type === "hole")
                 ) {
-                    const ball = obj1.type === "ball" ? obj1 : obj2;
+                    const ball = (obj1.type === "ball_small" || obj1.type === "ball_large") ? obj1 : obj2;
                     ball.live = false;
                     ball.visible = false;
-                    score += 10;
+                    score += 10; // 10 points for hole scoring (more than wall destruction)
+                    updateUI();
                     playSound("ballInHole");
                     return;
                 }

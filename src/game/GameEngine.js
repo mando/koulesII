@@ -620,6 +620,19 @@ export class GameEngine extends PIXI.utils.EventEmitter {
       // All movable objects die when hitting walls
       obj.live = false;
 
+      // Award points for destroying balls
+      if (
+        obj.type === GAME_CONSTANTS.BALL_SMALL ||
+        obj.type === GAME_CONSTANTS.BALL_LARGE
+      ) {
+        this.score += 5; // 5 points for wall destruction (less than hole scoring)
+        this.emit("scoreUpdate", {
+          score: this.score,
+          level: this.level,
+          lives: this.lives,
+        });
+      }
+
       // Play appropriate death sound
       if (obj.type === GAME_CONSTANTS.ROCKET) {
         this.audioManager.playSound("rocketDeath");
@@ -706,7 +719,12 @@ export class GameEngine extends PIXI.utils.EventEmitter {
           ? obj1
           : obj2;
       ball.live = false;
-      this.score += 10;
+      this.score += 10; // 10 points for hole scoring (more than wall destruction)
+      this.emit("scoreUpdate", {
+        score: this.score,
+        level: this.level,
+        lives: this.lives,
+      });
       this.audioManager.playSound("ballInHole");
       return;
     }
