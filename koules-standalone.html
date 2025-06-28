@@ -248,7 +248,8 @@
             // Calculate initial dimensions
             calculateGameDimensions();
             const ROCKET_RADIUS = 14;
-            const BALL_RADIUS = 8;
+            const BALL_SMALL_RADIUS = 8;
+            const BALL_LARGE_RADIUS = 16;
             const HOLE_RADIUS = 12;
 
             // Gravity constants
@@ -383,9 +384,12 @@
                 // Create balls
                 const ballCount = Math.min(8 + currentLevel, 15);
                 for (let i = 0; i < ballCount; i++) {
+                    // Create mix of small and large balls (75% small, 25% large)
+                    const isLarge = Math.random() < 0.25;
                     createBall(
                         100 + Math.random() * (GAME_WIDTH - 200),
                         100 + Math.random() * (GAME_HEIGHT - 200),
+                        isLarge
                     );
                 }
 
@@ -437,13 +441,19 @@
                 return rocket;
             }
 
-            function createBall(x, y) {
+            function createBall(x, y, isLarge = false) {
                 const ball = new PIXI.Graphics();
-                ball.beginFill(0x888888);
-                ball.drawCircle(0, 0, BALL_RADIUS);
+
+                // Set properties based on size
+                const radius = isLarge ? BALL_LARGE_RADIUS : BALL_SMALL_RADIUS;
+                const mass = isLarge ? 6 : 3;
+                const color = isLarge ? 0x606060 : 0x404040;
+
+                ball.beginFill(color);
+                ball.drawCircle(0, 0, radius);
                 ball.endFill();
-                ball.lineStyle(1, 0xaaaaaa);
-                ball.drawCircle(0, 0, BALL_RADIUS);
+                ball.lineStyle(1, 0xffffff, 0.5);
+                ball.drawCircle(0, 0, radius);
 
                 ball.x = x;
                 ball.y = y;
@@ -451,16 +461,15 @@
                 ball.vy = (Math.random() - 0.5) * 2;
                 ball.fx = 0;
                 ball.fy = 0;
-                ball.type = "ball";
-                ball.radius = BALL_RADIUS;
-                ball.mass = 3;
+                ball.type = isLarge ? "ball_large" : "ball_small";
+                ball.radius = radius;
+                ball.mass = mass;
                 ball.live = true;
+                ball.isLarge = isLarge;
 
                 app.stage.addChild(ball);
                 gameObjects.push(ball);
                 balls.push(ball);
-
-                return ball;
             }
 
             function createHole(x, y) {

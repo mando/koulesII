@@ -11,8 +11,8 @@ import * as PIXI from "pixi.js";
 const GAME_CONSTANTS = {
   // Object types
   ROCKET: 1,
-  BALL: 2,
-  LBALL: 3,
+  BALL_SMALL: 2,
+  BALL_LARGE: 3,
   CREATOR: 4,
   HOLE: 5,
   BBALL: 6,
@@ -22,7 +22,8 @@ const GAME_CONSTANTS = {
   LUNATIC: 10,
 
   // Radii
-  BALL_RADIUS: 8,
+  BALL_SMALL_RADIUS: 8,
+  BALL_LARGE_RADIUS: 16,
   BBALL_RADIUS: 16,
   APPLE_RADIUS: 32,
   INSPECTOR_RADIUS: 14,
@@ -38,8 +39,8 @@ const GAME_CONSTANTS = {
   GUMM: 20,
 
   // Masses
-  BALLM: 3,
-  LBALLM: 3,
+  BALL_SMALL_MASS: 3,
+  BALL_LARGE_MASS: 6,
   BBALLM: 8,
   APPLEM: 34,
   INSPECTORM: 2,
@@ -48,7 +49,8 @@ const GAME_CONSTANTS = {
 
   // Colors
   ROCKET_COLORS: [0x606060, 0xa0a0a0, 0x404040, 0x606060, 0x808080],
-  BALL_COLOR: 0x404040,
+  BALL_SMALL_COLOR: 0x404040,
+  BALL_LARGE_COLOR: 0x606060,
   BBALL_COLOR: 0x808080,
   APPLE_COLOR: 0x404040,
   HOLE_COLOR: 0x404040,
@@ -213,13 +215,22 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     const ballCount = Math.min(8 + this.level, 15);
 
     for (let i = 0; i < ballCount; i++) {
+      // Create mix of small and large balls (75% small, 25% large)
+      const isLarge = Math.random() < 0.25;
+      const ballType = isLarge
+        ? GAME_CONSTANTS.BALL_LARGE
+        : GAME_CONSTANTS.BALL_SMALL;
+      const ballColor = isLarge
+        ? GAME_CONSTANTS.BALL_LARGE_COLOR
+        : GAME_CONSTANTS.BALL_SMALL_COLOR;
+
       const ball = this.createGameObject({
-        type: GAME_CONSTANTS.BALL,
+        type: ballType,
         x: Math.random() * (this.app.screen.width - 100) + 50,
         y: Math.random() * (this.app.screen.height - 100) + 50,
         vx: (Math.random() - 0.5) * 2,
         vy: (Math.random() - 0.5) * 2,
-        color: GAME_CONSTANTS.BALL_COLOR,
+        color: ballColor,
       });
 
       this.balls.push(ball);
@@ -368,12 +379,12 @@ export class GameEngine extends PIXI.utils.EventEmitter {
         graphics.lineTo(0, obj.radius * 1.2);
         break;
 
-      case GAME_CONSTANTS.BALL:
-      case GAME_CONSTANTS.LBALL:
+      case GAME_CONSTANTS.BALL_SMALL:
+      case GAME_CONSTANTS.BALL_LARGE:
         graphics.beginFill(obj.color);
         graphics.drawCircle(0, 0, obj.radius);
         graphics.endFill();
-        graphics.lineStyle(1, 0x888888);
+        graphics.lineStyle(1, 0xffffff, 0.5);
         graphics.drawCircle(0, 0, obj.radius);
         break;
 
@@ -437,9 +448,10 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     switch (type) {
       case GAME_CONSTANTS.ROCKET:
         return GAME_CONSTANTS.ROCKET_RADIUS;
-      case GAME_CONSTANTS.BALL:
-      case GAME_CONSTANTS.LBALL:
-        return GAME_CONSTANTS.BALL_RADIUS;
+      case GAME_CONSTANTS.BALL_SMALL:
+        return GAME_CONSTANTS.BALL_SMALL_RADIUS;
+      case GAME_CONSTANTS.BALL_LARGE:
+        return GAME_CONSTANTS.BALL_LARGE_RADIUS;
       case GAME_CONSTANTS.BBALL:
         return GAME_CONSTANTS.BBALL_RADIUS;
       case GAME_CONSTANTS.HOLE:
@@ -459,9 +471,10 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     switch (type) {
       case GAME_CONSTANTS.ROCKET:
         return GAME_CONSTANTS.ROCKETM;
-      case GAME_CONSTANTS.BALL:
-      case GAME_CONSTANTS.LBALL:
-        return GAME_CONSTANTS.BALLM;
+      case GAME_CONSTANTS.BALL_SMALL:
+        return GAME_CONSTANTS.BALL_SMALL_MASS;
+      case GAME_CONSTANTS.BALL_LARGE:
+        return GAME_CONSTANTS.BALL_LARGE_MASS;
       case GAME_CONSTANTS.BBALL:
         return GAME_CONSTANTS.BBALLM;
       case GAME_CONSTANTS.APPLE:
@@ -680,11 +693,18 @@ export class GameEngine extends PIXI.utils.EventEmitter {
   handleSpecialCollisions(obj1, obj2) {
     // Ball into hole (scoring)
     if (
-      (obj1.type === GAME_CONSTANTS.BALL &&
+      ((obj1.type === GAME_CONSTANTS.BALL_SMALL ||
+        obj1.type === GAME_CONSTANTS.BALL_LARGE) &&
         obj2.type === GAME_CONSTANTS.HOLE) ||
-      (obj2.type === GAME_CONSTANTS.BALL && obj1.type === GAME_CONSTANTS.HOLE)
+      ((obj2.type === GAME_CONSTANTS.BALL_SMALL ||
+        obj2.type === GAME_CONSTANTS.BALL_LARGE) &&
+        obj1.type === GAME_CONSTANTS.HOLE)
     ) {
-      const ball = obj1.type === GAME_CONSTANTS.BALL ? obj1 : obj2;
+      const ball =
+        obj1.type === GAME_CONSTANTS.BALL_SMALL ||
+        obj1.type === GAME_CONSTANTS.BALL_LARGE
+          ? obj1
+          : obj2;
       ball.live = false;
       this.score += 10;
       this.audioManager.playSound("ballInHole");
@@ -742,7 +762,8 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     const aliveBalls = this.objects.filter(
       (obj) =>
         obj.live &&
-        (obj.type === GAME_CONSTANTS.BALL || obj.type === GAME_CONSTANTS.LBALL),
+        (obj.type === GAME_CONSTANTS.BALL_SMALL ||
+          obj.type === GAME_CONSTANTS.BALL_LARGE),
     );
 
     if (aliveBalls.length === 0) {
