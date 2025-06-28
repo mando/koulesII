@@ -323,7 +323,8 @@
                 ];
 
                 for (let i = 0; i < playerCount; i++) {
-                    createRocket(positions[i].x, positions[i].y, i);
+                    const safePosition = findSafeSpawnPosition(positions[i]);
+                    createRocket(safePosition.x, safePosition.y, i);
                 }
 
                 // Create balls
@@ -833,6 +834,64 @@
                     };
                     animateParticle();
                 }
+            }
+
+            // Find a safe spawn position that's not within gravitational pull of black holes
+            function findSafeSpawnPosition(preferredPosition) {
+                // Check if preferred position is safe
+                if (isPositionSafeFromGravity(preferredPosition.x, preferredPosition.y)) {
+                    return preferredPosition;
+                }
+
+                // If not safe, try to find a safe position nearby
+                const maxAttempts = 50;
+                const minDistanceFromHole = MAX_GRAVITY_DISTANCE + 20; // Add buffer
+
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    // Try positions in expanding circles around preferred position
+                    const angle = (attempt * 137.5 * Math.PI) / 180; // Golden angle for good distribution
+                    const radius = 50 + attempt * 10; // Expanding radius
+
+                    const testX = preferredPosition.x + Math.cos(angle) * radius;
+                    const testY = preferredPosition.y + Math.sin(angle) * radius;
+
+                    // Keep within screen bounds
+                    const clampedX = Math.max(50, Math.min(GAME_WIDTH - 50, testX));
+                    const clampedY = Math.max(50, Math.min(GAME_HEIGHT - 50, testY));
+
+                    if (isPositionSafeFromGravity(clampedX, clampedY)) {
+                        return { x: clampedX, y: clampedY };
+                    }
+                }
+
+                // If no safe position found, use a fallback position far from holes
+                console.warn("Could not find safe spawn position, using fallback");
+                return getFallbackSpawnPosition();
+            }
+
+            // Check if a position is safe from gravitational pull of all holes
+            function isPositionSafeFromGravity(x, y) {
+                for (const hole of holes) {
+                    if (hole.live) {
+                        const dx = hole.x - x;
+                        const dy = hole.y - y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        // Position is unsafe if within gravitational range
+                        if (distance < MAX_GRAVITY_DISTANCE) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Get a fallback spawn position in the center of the screen
+            function getFallbackSpawnPosition() {
+                return {
+                    x: GAME_WIDTH / 2,
+                    y: GAME_HEIGHT / 2,
+                };
             }
 
             function hideAllMenus() {
