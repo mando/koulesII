@@ -182,12 +182,16 @@ export class GameEngine extends PIXI.utils.EventEmitter {
   }
 
   createRockets() {
+    // Calculate proportional positions based on screen size
+    const screenWidth = this.app.screen.width;
+    const screenHeight = this.app.screen.height;
+
     const rocketPositions = [
-      { x: 100, y: 300 },
-      { x: 700, y: 300 },
-      { x: 400, y: 100 },
-      { x: 400, y: 500 },
-      { x: 200, y: 200 },
+      { x: screenWidth * 0.125, y: screenHeight * 0.5 }, // Left side, center
+      { x: screenWidth * 0.875, y: screenHeight * 0.5 }, // Right side, center
+      { x: screenWidth * 0.5, y: screenHeight * 0.167 }, // Top center
+      { x: screenWidth * 0.5, y: screenHeight * 0.833 }, // Bottom center
+      { x: screenWidth * 0.25, y: screenHeight * 0.333 }, // Left upper
     ];
 
     for (let i = 0; i < this.playerCount; i++) {

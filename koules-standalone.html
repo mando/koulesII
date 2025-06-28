@@ -15,12 +15,18 @@
                 min-height: 100vh;
                 font-family: "Courier New", monospace;
                 overflow: hidden;
+                width: 100vw;
+                height: 100vh;
             }
 
             #game-container {
                 position: relative;
                 border: 2px solid #333;
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+                max-width: 80vw;
+                max-height: 80vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             #ui-overlay {
@@ -204,9 +210,43 @@
             // Input handling
             let keys = {};
 
-            // Game constants
-            const GAME_WIDTH = 800;
-            const GAME_HEIGHT = 600;
+            // Game constants - calculate 80% of screen size
+            let GAME_WIDTH, GAME_HEIGHT;
+
+            function calculateGameDimensions() {
+                // Get 80% of screen dimensions
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+
+                // Target 80% of screen area
+                const targetWidth = screenWidth * 0.8;
+                const targetHeight = screenHeight * 0.8;
+
+                // Maintain 4:3 aspect ratio (original was 800x600)
+                const aspectRatio = 4 / 3;
+
+                // Calculate dimensions while maintaining aspect ratio
+                if (targetWidth / targetHeight > aspectRatio) {
+                    // Height is the limiting factor
+                    GAME_HEIGHT = targetHeight;
+                    GAME_WIDTH = targetHeight * aspectRatio;
+                } else {
+                    // Width is the limiting factor
+                    GAME_WIDTH = targetWidth;
+                    GAME_HEIGHT = targetWidth / aspectRatio;
+                }
+
+                // Ensure minimum playable size
+                GAME_WIDTH = Math.max(400, GAME_WIDTH);
+                GAME_HEIGHT = Math.max(300, GAME_HEIGHT);
+
+                // Round to integers for crisp rendering
+                GAME_WIDTH = Math.round(GAME_WIDTH);
+                GAME_HEIGHT = Math.round(GAME_HEIGHT);
+            }
+
+            // Calculate initial dimensions
+            calculateGameDimensions();
             const ROCKET_RADIUS = 14;
             const BALL_RADIUS = 8;
             const HOLE_RADIUS = 12;
@@ -258,8 +298,21 @@
                 keys[e.key] = false;
             });
 
+            // Handle window resize
+            window.addEventListener("resize", () => {
+                // Only resize if game is not actively playing to avoid disruption
+                if (gameState !== "playing") {
+                    calculateGameDimensions();
+                    if (app) {
+                        app.renderer.resize(GAME_WIDTH, GAME_HEIGHT);
+                    }
+                }
+            });
+
             async function initGame() {
-                // Initialize Pixi.js
+                // Recalculate dimensions in case window was resized
+                calculateGameDimensions();
+
                 app = new PIXI.Application({
                     width: GAME_WIDTH,
                     height: GAME_HEIGHT,
@@ -318,8 +371,8 @@
 
                 // Create rockets
                 const positions = [
-                    { x: 100, y: 300 },
-                    { x: 700, y: 300 },
+                    { x: GAME_WIDTH * 0.125, y: GAME_HEIGHT * 0.5 }, // Left side, center
+                    { x: GAME_WIDTH * 0.875, y: GAME_HEIGHT * 0.5 }, // Right side, center
                 ];
 
                 for (let i = 0; i < playerCount; i++) {
