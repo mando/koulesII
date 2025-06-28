@@ -771,6 +771,9 @@
                 // Check if all balls are destroyed
                 const aliveBalls = balls.filter((ball) => ball.live);
                 if (aliveBalls.length === 0) {
+                    // Award level completion bonus
+                    score += 100;
+                    checkExtraLife(); // Check for extra life after level bonus
                     levelComplete();
                     return;
                 }
@@ -789,7 +792,7 @@
 
             function levelComplete() {
                 gameState = "menu";
-                document.getElementById("level-score").textContent = score;
+                document.getElementById("level-score").textContent = score + " (+100 Level Bonus)";
                 document
                     .getElementById("level-complete")
                     .classList.remove("hidden");

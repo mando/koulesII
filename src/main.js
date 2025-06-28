@@ -253,7 +253,9 @@ class KoulesGame {
 
     // Show level complete message
     setTimeout(() => {
-      alert(`Level ${data.level} Complete! Score: ${data.score}`);
+      alert(
+        `Level ${data.level} Complete! Score: ${data.score} (+100 Level Bonus)`,
+      );
       this.startGame(this.playerCount);
     }, 1000);
   }

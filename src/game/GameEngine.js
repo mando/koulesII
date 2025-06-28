@@ -784,10 +784,17 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     );
 
     if (aliveBalls.length === 0) {
+      // Award level completion bonus
+      this.score += 100;
+
       this.emit("levelComplete", {
         level: this.level,
         score: this.score,
+        levelBonus: 100,
       });
+
+      // Check for extra life after level bonus
+      this.checkExtraLife();
     }
 
     // Check if all rockets are destroyed
