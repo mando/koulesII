@@ -38,6 +38,11 @@ const GAME_CONSTANTS = {
   SLOWDOWN: 0.8,
   GUMM: 20,
 
+  // Mass transfer constants
+  MASS_TRANSFER_RATE: 0.05, // Percentage of mass to transfer per collision
+  MIN_MASS_THRESHOLD: 0.5, // Minimum mass an object can have
+  VELOCITY_THRESHOLD: 0.1, // Minimum velocity difference for mass transfer
+
   // Masses
   BALL_SMALL_MASS: 3,
   BALL_LARGE_MASS: 6,
@@ -694,11 +699,106 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     obj2.vx -= impulse * obj1.mass * nx;
     obj2.vy -= impulse * obj1.mass * ny;
 
+    // Mass transfer based on relative velocities
+    this.handleMassTransfer(obj1, obj2);
+
     // Handle special collision cases
     this.handleSpecialCollisions(obj1, obj2);
 
     // Play collision sound
     this.audioManager.playSound("collision");
+  }
+
+  handleMassTransfer(obj1, obj2) {
+    // Skip mass transfer for special objects (holes, creators, etc.)
+    const transferableTypes = [
+      GAME_CONSTANTS.ROCKET,
+      GAME_CONSTANTS.BALL_SMALL,
+      GAME_CONSTANTS.BALL_LARGE,
+      GAME_CONSTANTS.BBALL,
+      GAME_CONSTANTS.APPLE,
+      GAME_CONSTANTS.INSPECTOR,
+      GAME_CONSTANTS.LUNATIC,
+    ];
+
+    if (
+      !transferableTypes.includes(obj1.type) ||
+      !transferableTypes.includes(obj2.type)
+    ) {
+      return;
+    }
+
+    // Calculate velocity magnitudes
+    const vel1 = Math.sqrt(obj1.vx * obj1.vx + obj1.vy * obj1.vy);
+    const vel2 = Math.sqrt(obj2.vx * obj2.vx + obj2.vy * obj2.vy);
+
+    // Only transfer mass if there's a significant velocity difference
+    if (Math.abs(vel1 - vel2) < GAME_CONSTANTS.VELOCITY_THRESHOLD) {
+      return;
+    }
+
+    // Determine which object is faster and which is slower
+    let fasterObj, slowerObj;
+    if (vel1 > vel2) {
+      fasterObj = obj1;
+      slowerObj = obj2;
+    } else {
+      fasterObj = obj2;
+      slowerObj = obj1;
+    }
+
+    // Calculate mass transfer amount (proportional to velocity difference)
+    const velocityDifference = Math.abs(vel1 - vel2);
+    const baseMassTransfer = slowerObj.mass * GAME_CONSTANTS.MASS_TRANSFER_RATE;
+    const massTransfer = baseMassTransfer * Math.min(velocityDifference / 5, 1); // Cap the multiplier
+
+    // Ensure slower object doesn't go below minimum mass
+    const actualMassTransfer = Math.min(
+      massTransfer,
+      slowerObj.mass - GAME_CONSTANTS.MIN_MASS_THRESHOLD,
+    );
+
+    // Only transfer if there's actually mass to transfer
+    if (actualMassTransfer > 0) {
+      slowerObj.mass -= actualMassTransfer;
+      fasterObj.mass += actualMassTransfer;
+
+      // Visual feedback: create small particle effect at collision point
+      const midX = (obj1.x + obj2.x) / 2;
+      const midY = (obj1.y + obj2.y) / 2;
+      this.createMassTransferEffect(midX, midY, actualMassTransfer);
+    }
+  }
+
+  createMassTransferEffect(x, y, massAmount) {
+    // Create a small visual effect to indicate mass transfer
+    const effectSprite = new PIXI.Graphics();
+    effectSprite.beginFill(0x00ff00, 0.8); // Green glow
+    const size = Math.min(massAmount * 2, 8); // Scale effect with mass transferred
+    effectSprite.drawCircle(0, 0, size);
+    effectSprite.endFill();
+    effectSprite.x = x;
+    effectSprite.y = y;
+
+    this.gameContainer.addChild(effectSprite);
+
+    // Animate the effect
+    let alpha = 0.8;
+    let scale = 1;
+    const fadeOut = () => {
+      alpha -= 0.05;
+      scale += 0.02;
+      effectSprite.alpha = alpha;
+      effectSprite.scale.set(scale);
+
+      if (alpha > 0) {
+        requestAnimationFrame(fadeOut);
+      } else {
+        this.gameContainer.removeChild(effectSprite);
+        effectSprite.destroy();
+      }
+    };
+    fadeOut();
   }
 
   handleSpecialCollisions(obj1, obj2) {
