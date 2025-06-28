@@ -70,6 +70,7 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     this.level = 1;
     this.score = 0;
     this.lives = 3;
+    this.nextLifeAt = 500; // Next life awarded at this score
     this.playerCount = 1;
     this.gameMode = "cooperative";
 
@@ -135,6 +136,7 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     this.gameMode = config.gameMode || "cooperative";
     this.score = 0;
     this.lives = 3;
+    this.nextLifeAt = 500; // Reset life threshold
 
     // Clear existing objects
     this.clearGame();
@@ -623,18 +625,10 @@ export class GameEngine extends PIXI.utils.EventEmitter {
       // Award points for destroying balls
       if (obj.type === GAME_CONSTANTS.BALL_SMALL) {
         this.score += 5; // 5 points for small ball wall destruction
-        this.emit("scoreUpdate", {
-          score: this.score,
-          level: this.level,
-          lives: this.lives,
-        });
+        this.checkExtraLife();
       } else if (obj.type === GAME_CONSTANTS.BALL_LARGE) {
         this.score += 10; // 10 points for large ball wall destruction (2x small)
-        this.emit("scoreUpdate", {
-          score: this.score,
-          level: this.level,
-          lives: this.lives,
-        });
+        this.checkExtraLife();
       }
 
       // Play appropriate death sound
@@ -729,11 +723,7 @@ export class GameEngine extends PIXI.utils.EventEmitter {
       } else if (ball.type === GAME_CONSTANTS.BALL_LARGE) {
         this.score += 20; // 20 points for large ball hole scoring (2x small)
       }
-      this.emit("scoreUpdate", {
-        score: this.score,
-        level: this.level,
-        lives: this.lives,
-      });
+      this.checkExtraLife();
       this.audioManager.playSound("ballInHole");
       return;
     }
@@ -911,8 +901,32 @@ export class GameEngine extends PIXI.utils.EventEmitter {
     }
   }
 
+  // Check if player earned an extra life
+  checkExtraLife() {
+    if (this.score >= this.nextLifeAt) {
+      this.lives++;
+      this.nextLifeAt += 500; // Next life in another 500 points
+
+      // Play extra life sound and show feedback
+      this.audioManager.playSound("levelComplete"); // Use happy sound for extra life
+
+      this.emit("extraLife", {
+        score: this.score,
+        level: this.level,
+        lives: this.lives,
+        nextLifeAt: this.nextLifeAt,
+      });
+    }
+
+    // Always emit score update
+    this.emit("scoreUpdate", {
+      score: this.score,
+      level: this.level,
+      lives: this.lives,
+    });
+  }
+
   stop() {
     this.gameState = "stopped";
-    this.clearGame();
   }
 }

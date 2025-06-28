@@ -199,6 +199,7 @@
             let currentLevel = 1;
             let score = 0;
             let lives = 3;
+            let nextLifeAt = 500; // Next life awarded at this score
             let playerCount = 1;
 
             // Game objects
@@ -357,6 +358,7 @@
                 currentLevel = 1;
                 score = 0;
                 lives = 3;
+                nextLifeAt = 500; // Reset life threshold
 
                 hideAllMenus();
                 showGameUI();
@@ -646,10 +648,10 @@
                     // Award points for destroying balls
                     if (obj.type === "ball_small") {
                         score += 5; // 5 points for small ball wall destruction
-                        updateUI();
+                        checkExtraLife();
                     } else if (obj.type === "ball_large") {
                         score += 10; // 10 points for large ball wall destruction (2x small)
-                        updateUI();
+                        checkExtraLife();
                     }
 
                     // Play appropriate death sound
@@ -711,7 +713,7 @@
                     } else if (ball.type === "ball_large") {
                         score += 20; // 20 points for large ball hole scoring (2x small)
                     }
-                    updateUI();
+                    checkExtraLife();
                     playSound("ballInHole");
                     return;
                 }
@@ -848,6 +850,75 @@
                 document.getElementById("score").textContent = score;
                 document.getElementById("level").textContent = currentLevel;
                 document.getElementById("lives").textContent = lives;
+            }
+
+            // Check if player earned an extra life
+            function checkExtraLife() {
+                if (score >= nextLifeAt) {
+                    lives++;
+                    nextLifeAt += 500; // Next life in another 500 points
+
+                    // Play extra life sound and show feedback
+                    playSound("levelComplete"); // Use happy sound for extra life
+
+                    // Show extra life notification in UI
+                    showExtraLifeNotification(lives, nextLifeAt);
+                }
+
+                // Always update UI
+                updateUI();
+            }
+
+            function showExtraLifeNotification(lives, nextLifeAt) {
+                // Create notification element if it doesn't exist
+                let notification = document.getElementById("extra-life-notification");
+                if (!notification) {
+                    notification = document.createElement("div");
+                    notification.id = "extra-life-notification";
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(0, 255, 255, 0.9);
+                        color: #000;
+                        padding: 20px;
+                        border: 2px solid #00ffff;
+                        border-radius: 10px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 18px;
+                        font-weight: bold;
+                        text-align: center;
+                        z-index: 1000;
+                        box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+                        display: none;
+                    `;
+                    document.body.appendChild(notification);
+                }
+
+                // Update notification content
+                notification.innerHTML = `
+                    🎉 EXTRA LIFE! 🎉<br>
+                    You now have ${lives} lives<br>
+                    Next life at ${nextLifeAt} points
+                `;
+
+                // Show notification with fade-in effect
+                notification.style.display = "block";
+                notification.style.opacity = "0";
+                notification.style.transition = "opacity 0.3s ease-in";
+
+                setTimeout(() => {
+                    notification.style.opacity = "1";
+                }, 10);
+
+                // Hide notification after 3 seconds
+                setTimeout(() => {
+                    notification.style.opacity = "0";
+                    setTimeout(() => {
+                        notification.style.display = "none";
+                    }, 300);
+                }, 3000);
             }
 
             function showMainMenu() {

@@ -149,6 +149,10 @@ class KoulesGame {
     this.gameEngine.on("scoreUpdate", (data) => {
       this.updateScore(data);
     });
+
+    this.gameEngine.on("extraLife", (data) => {
+      this.handleExtraLife(data);
+    });
   }
 
   showMainMenu() {
@@ -262,6 +266,66 @@ class KoulesGame {
     if (scoreElement) scoreElement.textContent = `Score: ${data.score}`;
     if (levelElement) levelElement.textContent = `Level: ${data.level}`;
     if (livesElement) livesElement.textContent = `Lives: ${data.lives}`;
+  }
+
+  handleExtraLife(data) {
+    // Update UI immediately
+    this.updateScore(data);
+
+    // Show extra life notification in UI
+    this.showExtraLifeNotification(data.lives, data.nextLifeAt);
+  }
+
+  showExtraLifeNotification(lives, nextLifeAt) {
+    // Create notification element if it doesn't exist
+    let notification = document.getElementById("extra-life-notification");
+    if (!notification) {
+      notification = document.createElement("div");
+      notification.id = "extra-life-notification";
+      notification.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 255, 255, 0.9);
+        color: #000;
+        padding: 20px;
+        border: 2px solid #00ffff;
+        border-radius: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        z-index: 1000;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        display: none;
+      `;
+      document.body.appendChild(notification);
+    }
+
+    // Update notification content
+    notification.innerHTML = `
+      🎉 EXTRA LIFE! 🎉<br>
+      You now have ${lives} lives<br>
+      Next life at ${nextLifeAt} points
+    `;
+
+    // Show notification with fade-in effect
+    notification.style.display = "block";
+    notification.style.opacity = "0";
+    notification.style.transition = "opacity 0.3s ease-in";
+
+    setTimeout(() => {
+      notification.style.opacity = "1";
+    }, 10);
+
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+      notification.style.opacity = "0";
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 300);
+    }, 3000);
   }
 
   updateUI() {
