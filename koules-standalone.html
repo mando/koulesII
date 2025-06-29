@@ -416,6 +416,9 @@
                 const colors = [
                     0x0088ff, 0xff4444, 0x44ff44, 0xffff44, 0xff44ff,
                 ];
+
+                // Create a container to hold both the graphics and mass text
+                const container = new PIXI.Container();
                 const rocket = new PIXI.Graphics();
 
                 rocket.beginFill(colors[playerId]);
@@ -429,26 +432,60 @@
                 rocket.moveTo(0, ROCKET_RADIUS * 0.7);
                 rocket.lineTo(0, ROCKET_RADIUS * 1.2);
 
-                rocket.x = x;
-                rocket.y = y;
-                rocket.vx = 0;
-                rocket.vy = 0;
-                rocket.fx = 0;
-                rocket.fy = 0;
-                rocket.playerId = playerId;
-                rocket.type = "rocket";
-                rocket.radius = ROCKET_RADIUS;
-                rocket.mass = 4;
-                rocket.live = true;
+                // Add the graphics to the container
+                container.addChild(rocket);
 
-                app.stage.addChild(rocket);
-                gameObjects.push(rocket);
-                rockets.push(rocket);
+                // Create mass text display above the rocket
+                const mass = 4;
+                const massText = new PIXI.Text(mass, {
+                    fontFamily: "Arial",
+                    fontSize: 12,
+                    fill: 0xffffff,
+                    align: "center",
+                });
+                massText.anchor.set(0.5, 1); // Center horizontally, bottom aligned
+                massText.x = 0;
+                massText.y = -ROCKET_RADIUS - 5; // Position above the rocket
+                container.addChild(massText);
 
-                return rocket;
+                // Create velocity text display below the rocket
+                const velocityText = new PIXI.Text("0.0", {
+                    fontFamily: "Arial",
+                    fontSize: 10,
+                    fill: 0x00ffff,
+                    align: "center",
+                });
+                velocityText.anchor.set(0.5, 0); // Center horizontally, top aligned
+                velocityText.x = 0;
+                velocityText.y = ROCKET_RADIUS + 5; // Position below the rocket
+                container.addChild(velocityText);
+
+                // Store reference to mass text and velocity text for updates
+                container.massText = massText;
+                container.velocityText = velocityText;
+
+                container.x = x;
+                container.y = y;
+                container.vx = 0;
+                container.vy = 0;
+                container.fx = 0;
+                container.fy = 0;
+                container.playerId = playerId;
+                container.type = "rocket";
+                container.radius = ROCKET_RADIUS;
+                container.mass = mass;
+                container.live = true;
+
+                app.stage.addChild(container);
+                gameObjects.push(container);
+                rockets.push(container);
+
+                return container;
             }
 
             function createBall(x, y, isLarge = false) {
+                // Create a container to hold both the graphics and mass text
+                const container = new PIXI.Container();
                 const ball = new PIXI.Graphics();
 
                 // Set properties based on size
@@ -462,21 +499,52 @@
                 ball.lineStyle(1, 0xffffff, 0.5);
                 ball.drawCircle(0, 0, radius);
 
-                ball.x = x;
-                ball.y = y;
-                ball.vx = (Math.random() - 0.5) * 2;
-                ball.vy = (Math.random() - 0.5) * 2;
-                ball.fx = 0;
-                ball.fy = 0;
-                ball.type = isLarge ? "ball_large" : "ball_small";
-                ball.radius = radius;
-                ball.mass = mass;
-                ball.live = true;
-                ball.isLarge = isLarge;
+                // Add the graphics to the container
+                container.addChild(ball);
 
-                app.stage.addChild(ball);
-                gameObjects.push(ball);
-                balls.push(ball);
+                // Create mass text display above the ball
+                const massText = new PIXI.Text(mass, {
+                    fontFamily: "Arial",
+                    fontSize: 12,
+                    fill: 0xffffff,
+                    align: "center",
+                });
+                massText.anchor.set(0.5, 1); // Center horizontally, bottom aligned
+                massText.x = 0;
+                massText.y = -radius - 5; // Position above the ball
+                container.addChild(massText);
+
+                // Create velocity text display below the ball
+                const velocityText = new PIXI.Text("0.0", {
+                    fontFamily: "Arial",
+                    fontSize: 10,
+                    fill: 0x00ffff,
+                    align: "center",
+                });
+                velocityText.anchor.set(0.5, 0); // Center horizontally, top aligned
+                velocityText.x = 0;
+                velocityText.y = radius + 5; // Position below the ball
+                container.addChild(velocityText);
+
+                // Store reference to mass text and velocity text for updates
+                container.massText = massText;
+                container.velocityText = velocityText;
+
+                container.x = x;
+                container.y = y;
+                container.vx = (Math.random() - 0.5) * 2;
+                container.vy = (Math.random() - 0.5) * 2;
+                container.fx = 0;
+                container.fy = 0;
+                container.type = isLarge ? "ball_large" : "ball_small";
+                container.radius = radius;
+                container.mass = mass;
+                container.live = true;
+                container.isLarge = isLarge;
+
+                app.stage.addChild(container);
+                gameObjects.push(container);
+                balls.push(container);
             }
 
             function createHole(x, y) {
@@ -600,6 +668,17 @@
                     // Update position
                     obj.x += obj.vx;
                     obj.y += obj.vy;
+
+                    // Update mass display
+                    if (obj.massText) {
+                        obj.massText.text = Math.round(obj.mass * 10) / 10;
+                    }
+
+                    // Update velocity display
+                    if (obj.velocityText) {
+                        const velocity = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+                        obj.velocityText.text = Math.round(velocity * 10) / 10;
+                    }
 
                     // Keep in bounds
                     keepInBounds(obj);

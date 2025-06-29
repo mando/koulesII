@@ -368,6 +368,8 @@ export class GameEngine extends PIXI.utils.EventEmitter {
   }
 
   createSprite(obj) {
+    // Create a container to hold both the graphics and mass text
+    const container = new PIXI.Container();
     const graphics = new PIXI.Graphics();
 
     switch (obj.type) {
@@ -444,11 +446,29 @@ export class GameEngine extends PIXI.utils.EventEmitter {
         graphics.endFill();
     }
 
-    graphics.x = obj.x;
-    graphics.y = obj.y;
-    graphics.rotation = obj.rotation;
+    // Add the graphics to the container
+    container.addChild(graphics);
 
-    return graphics;
+    // Create mass text display above the object
+    const massText = new PIXI.Text(Math.round(obj.mass * 10) / 10, {
+      fontFamily: "Arial",
+      fontSize: 12,
+      fill: 0xffffff,
+      align: "center",
+    });
+    massText.anchor.set(0.5, 1); // Center horizontally, bottom aligned
+    massText.x = 0;
+    massText.y = -obj.radius - 5; // Position above the object
+    container.addChild(massText);
+
+    // Store reference to mass text for updates
+    container.massText = massText;
+
+    container.x = obj.x;
+    container.y = obj.y;
+    container.rotation = obj.rotation;
+
+    return container;
   }
 
   getRadius(type) {
@@ -858,6 +878,11 @@ export class GameEngine extends PIXI.utils.EventEmitter {
         obj.sprite.x = obj.x;
         obj.sprite.y = obj.y;
         obj.sprite.rotation = obj.rotation;
+
+        // Update mass display
+        if (obj.sprite.massText) {
+          obj.sprite.massText.text = Math.round(obj.mass * 10) / 10;
+        }
 
         // Hide dead objects
         obj.sprite.visible = obj.live;
