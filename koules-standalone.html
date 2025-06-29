@@ -901,20 +901,19 @@
                     return;
                 }
 
-                // Determine which object is faster and which is slower
+                // MASS TRANSFER RULE: Transfer mass from slower object to faster object
+                // This simulates momentum conservation where faster objects "steal" mass
                 let fasterObj, slowerObj;
                 if (vel1 > vel2) {
-                    fasterObj = obj1;
-                    slowerObj = obj2;
+                    fasterObj = obj1;  // obj1 is moving faster
+                    slowerObj = obj2;  // obj2 is moving slower
                 } else {
-                    fasterObj = obj2;
-                    slowerObj = obj1;
+                    fasterObj = obj2;  // obj2 is moving faster
+                    slowerObj = obj1;  // obj1 is moving slower
                 }
 
-                // Calculate mass transfer amount (proportional to velocity difference)
-                const velocityDifference = Math.abs(vel1 - vel2);
-                const baseMassTransfer = slowerObj.mass * MASS_TRANSFER_RATE;
-                const massTransfer = baseMassTransfer * Math.min(velocityDifference / 5, 1); // Cap the multiplier
+                // Calculate mass transfer amount: 20% of slower object's mass
+                const massTransfer = slowerObj.mass * 0.2;
 
                 // Ensure slower object doesn't go below minimum mass
                 const actualMassTransfer = Math.min(
@@ -922,10 +921,19 @@
                     slowerObj.mass - MIN_MASS_THRESHOLD,
                 );
 
-                // Only transfer if there's actually mass to transfer
+                // Execute the transfer: slower object loses mass, faster object gains mass
                 if (actualMassTransfer > 0) {
-                    slowerObj.mass -= actualMassTransfer;
-                    fasterObj.mass += actualMassTransfer;
+                    const slowerOldMass = slowerObj.mass;
+                    const fasterOldMass = fasterObj.mass;
+
+                    slowerObj.mass -= actualMassTransfer;  // Remove mass from slower object
+                    fasterObj.mass += actualMassTransfer;  // Add mass to faster object
+
+                    // Console logging for mass transfer
+                    console.log(`MASS TRANSFER: ${actualMassTransfer.toFixed(2)} mass transferred`);
+                    console.log(`  Slower object (${slowerObj.type}): ${slowerOldMass.toFixed(2)} → ${slowerObj.mass.toFixed(2)} (-${actualMassTransfer.toFixed(2)}) | velocity: ${(slowerObj === obj1 ? vel1 : vel2).toFixed(2)}`);
+                    console.log(`  Faster object (${fasterObj.type}): ${fasterOldMass.toFixed(2)} → ${fasterObj.mass.toFixed(2)} (+${actualMassTransfer.toFixed(2)}) | velocity: ${(fasterObj === obj1 ? vel1 : vel2).toFixed(2)}`);
+                    console.log(`  Velocity difference: ${Math.abs(vel1 - vel2).toFixed(2)}`);
 
                     // Visual feedback: create small particle effect at collision point
                     const midX = (obj1.x + obj2.x) / 2;
