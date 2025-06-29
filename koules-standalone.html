@@ -210,6 +210,7 @@
 
             // Input handling
             let keys = {};
+            let displayStats = true; // Toggle for mass and velocity displays
 
             // Game constants - calculate 80% of screen size
             let GAME_WIDTH, GAME_HEIGHT;
@@ -280,6 +281,10 @@
                     if (gameState === "playing") {
                         restartLevel();
                     }
+                } else if (e.key === "?") {
+                    // Toggle mass and velocity displays
+                    displayStats = !displayStats;
+                    updateStatsDisplay();
                 }
 
                 // Prevent default for game keys
@@ -300,6 +305,18 @@
                     e.preventDefault();
                 }
             });
+
+            function updateStatsDisplay() {
+                // Toggle visibility of all mass and velocity displays
+                gameObjects.forEach((obj) => {
+                    if (obj.massText) {
+                        obj.massText.visible = displayStats;
+                    }
+                    if (obj.velocityText) {
+                        obj.velocityText.visible = displayStats;
+                    }
+                });
+            }
 
             document.addEventListener("keyup", (e) => {
                 keys[e.key] = false;
@@ -464,6 +481,10 @@
                 container.massText = massText;
                 container.velocityText = velocityText;
 
+                // Set initial visibility based on displayStats
+                massText.visible = displayStats;
+                velocityText.visible = displayStats;
+
                 container.x = x;
                 container.y = y;
                 container.vx = 0;
@@ -529,6 +550,10 @@
                 // Store reference to mass text and velocity text for updates
                 container.massText = massText;
                 container.velocityText = velocityText;
+
+                // Set initial visibility based on displayStats
+                massText.visible = displayStats;
+                velocityText.visible = displayStats;
 
                 container.x = x;
                 container.y = y;
@@ -672,12 +697,14 @@
                     // Update mass display
                     if (obj.massText) {
                         obj.massText.text = Math.round(obj.mass * 10) / 10;
+                        obj.massText.visible = displayStats;
                     }
 
                     // Update velocity display
                     if (obj.velocityText) {
                         const velocity = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
                         obj.velocityText.text = Math.round(velocity * 10) / 10;
+                        obj.velocityText.visible = displayStats;
                     }
 
                     // Keep in bounds
