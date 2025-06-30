@@ -866,7 +866,10 @@
                 // Don't resolve if velocities are separating
                 if (dvn > 0) return;
 
-                // Calculate collision impulse
+                // Mass transfer based on velocities BEFORE collision changes them
+                handleMassTransfer(obj1, obj2);
+
+                // Calculate collision impulse (using updated masses from transfer)
                 const impulse = (2 * dvn) / (obj1.mass + obj2.mass);
 
                 // Apply impulse
@@ -874,9 +877,6 @@
                 obj1.vy += impulse * obj2.mass * ny;
                 obj2.vx -= impulse * obj1.mass * nx;
                 obj2.vy -= impulse * obj1.mass * ny;
-
-                // Mass transfer based on relative velocities
-                handleMassTransfer(obj1, obj2);
 
                 playSound("collision");
             }
@@ -892,24 +892,25 @@
                     return;
                 }
 
-                // Calculate velocity magnitudes
+                // Calculate ABSOLUTE velocity magnitudes (speeds) for each object
+                // This uses the magnitude of the velocity vector, not relative velocity
                 const vel1 = Math.sqrt(obj1.vx * obj1.vx + obj1.vy * obj1.vy);
                 const vel2 = Math.sqrt(obj2.vx * obj2.vx + obj2.vy * obj2.vy);
 
-                // Only transfer mass if there's a significant velocity difference
+                // Only transfer mass if there's a significant difference in absolute speeds
                 if (Math.abs(vel1 - vel2) < VELOCITY_THRESHOLD) {
                     return;
                 }
 
                 // MASS TRANSFER RULE: Transfer mass from slower object to faster object
-                // This simulates momentum conservation where faster objects "steal" mass
+                // Based on ABSOLUTE velocities - the object with higher speed gains mass
                 let fasterObj, slowerObj;
                 if (vel1 > vel2) {
-                    fasterObj = obj1;  // obj1 is moving faster
-                    slowerObj = obj2;  // obj2 is moving slower
+                    fasterObj = obj1;  // obj1 has higher absolute velocity
+                    slowerObj = obj2;  // obj2 has lower absolute velocity
                 } else {
-                    fasterObj = obj2;  // obj2 is moving faster
-                    slowerObj = obj1;  // obj1 is moving slower
+                    fasterObj = obj2;  // obj2 has higher absolute velocity
+                    slowerObj = obj1;  // obj1 has lower absolute velocity
                 }
 
                 // Calculate mass transfer amount: 20% of slower object's mass
@@ -933,7 +934,7 @@
                     console.log(`MASS TRANSFER: ${actualMassTransfer.toFixed(2)} mass transferred`);
                     console.log(`  Slower object (${slowerObj.type}): ${slowerOldMass.toFixed(2)} → ${slowerObj.mass.toFixed(2)} (-${actualMassTransfer.toFixed(2)}) | velocity: ${(slowerObj === obj1 ? vel1 : vel2).toFixed(2)}`);
                     console.log(`  Faster object (${fasterObj.type}): ${fasterOldMass.toFixed(2)} → ${fasterObj.mass.toFixed(2)} (+${actualMassTransfer.toFixed(2)}) | velocity: ${(fasterObj === obj1 ? vel1 : vel2).toFixed(2)}`);
-                    console.log(`  Velocity difference: ${Math.abs(vel1 - vel2).toFixed(2)}`);
+                    console.log(`  Absolute velocity difference: ${Math.abs(vel1 - vel2).toFixed(2)}`);
 
                     // Visual feedback: create small particle effect at collision point
                     const midX = (obj1.x + obj2.x) / 2;
