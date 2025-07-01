@@ -125,6 +125,7 @@
     </head>
     <body>
         <div id="game-container">
+            <div id="extra-life-notification" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #00ffff; font-size: 18px; font-weight: bold; text-align: center; z-index: 1000; display: none;"></div>
             <div id="main-menu" class="menu">
                 <h1>K O U L E S I I</h1>
                 <p>Enhanced physics-based space game with deadly walls & gravitational black holes</p>
@@ -168,7 +169,11 @@
                 <div>Score: <span id="score">0</span></div>
                 <div>Level: <span id="level">1</span></div>
                 <div>Lives: <span id="lives">3</span></div>
+
             </div>
+        </div>
+
+
 
             <div id="controls-info" class="hidden">
                 <div>Player 1: Arrow Keys (thrust) + Space (brake)</div>
@@ -1159,38 +1164,10 @@
             }
 
             function showExtraLifeNotification(lives, nextLifeAt) {
-                // Create notification element if it doesn't exist
-                let notification = document.getElementById("extra-life-notification");
-                if (!notification) {
-                    notification = document.createElement("div");
-                    notification.id = "extra-life-notification";
-                    notification.style.cssText = `
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background: rgba(0, 255, 255, 0.9);
-                        color: #000;
-                        padding: 20px;
-                        border: 2px solid #00ffff;
-                        border-radius: 10px;
-                        font-family: 'Courier New', monospace;
-                        font-size: 18px;
-                        font-weight: bold;
-                        text-align: center;
-                        z-index: 1000;
-                        box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
-                        display: none;
-                    `;
-                    document.body.appendChild(notification);
-                }
+                const notification = document.getElementById("extra-life-notification");
 
                 // Update notification content
-                notification.innerHTML = `
-                    🎉 EXTRA LIFE! 🎉<br>
-                    You now have ${lives} lives<br>
-                    Next life at ${nextLifeAt} points
-                `;
+                notification.innerHTML = `🎉 EXTRA LIFE! You now have ${lives} lives (Next at ${nextLifeAt} points)`;
 
                 // Show notification with fade-in effect
                 notification.style.display = "block";
