@@ -211,6 +211,7 @@
             // Input handling
             let keys = {};
             let displayStats = false; // Toggle for mass and velocity displays
+            let storedRocketMass = 4; // Rocket mass retained between levels
 
             // Game constants - calculate 80% of screen size
             let GAME_WIDTH, GAME_HEIGHT;
@@ -381,6 +382,8 @@
                 score = 0;
                 lives = 3;
                 nextLifeAt = 500; // Reset life threshold
+                storedRocketMass = 4; // Reset rocket mass for new game
+                console.log(`START GAME: Rocket mass initialized to ${storedRocketMass.toFixed(2)}`);
 
                 hideAllMenus();
                 showGameUI();
@@ -453,7 +456,8 @@
                 container.addChild(rocket);
 
                 // Create mass text display above the rocket
-                const mass = 4;
+                const mass = storedRocketMass;
+                console.log(`ROCKET CREATED: Using stored mass ${mass.toFixed(2)}`);
                 const massText = new PIXI.Text(mass, {
                     fontFamily: "Arial",
                     fontSize: 12,
@@ -698,6 +702,14 @@
                     if (obj.massText) {
                         obj.massText.text = Math.round(obj.mass * 10) / 10;
                         obj.massText.visible = displayStats;
+                    }
+
+                    // Store rocket mass for retention between levels
+                    if (obj.type === "rocket" && obj.live) {
+                        if (storedRocketMass !== obj.mass) {
+                            console.log(`ROCKET MASS UPDATED: ${storedRocketMass.toFixed(2)} → ${obj.mass.toFixed(2)}`);
+                            storedRocketMass = obj.mass;
+                        }
                     }
 
                     // Update velocity display
@@ -990,8 +1002,14 @@
                 if (aliveRockets.length === 0) {
                     lives--;
                     if (lives <= 0) {
+                        // Reset rocket mass when player dies (game over)
+                        console.log(`GAME OVER: Resetting rocket mass from ${storedRocketMass.toFixed(2)} to 4.0`);
+                        storedRocketMass = 4;
                         gameOver();
                     } else {
+                        // Reset rocket mass after losing a life
+                        console.log(`LIFE LOST: Resetting rocket mass from ${storedRocketMass.toFixed(2)} to 4.0`);
+                        storedRocketMass = 4;
                         restartLevel();
                     }
                 }
@@ -1014,6 +1032,8 @@
             }
 
             function nextLevel() {
+                // Rocket mass already stored in updatePhysics, just advance level
+                console.log(`NEXT LEVEL: Retaining rocket mass ${storedRocketMass.toFixed(2)} for level ${currentLevel + 1}`);
                 currentLevel++;
                 document
                     .getElementById("level-complete")
@@ -1023,11 +1043,16 @@
             }
 
             function restartLevel() {
+                // Rocket mass already stored in updatePhysics, just restart level
+                console.log(`RESTART LEVEL: Retaining rocket mass ${storedRocketMass.toFixed(2)}`);
                 initLevel();
                 gameState = "playing";
             }
 
             function restartGame() {
+                // Reset rocket mass when starting new game
+                console.log(`RESTART GAME: Resetting rocket mass from ${storedRocketMass.toFixed(2)} to 4.0`);
+                storedRocketMass = 4;
                 document.getElementById("game-over").classList.add("hidden");
                 startGame(playerCount);
             }
