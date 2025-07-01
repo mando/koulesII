@@ -701,7 +701,16 @@
 
             function updatePhysics() {
                 gameObjects.forEach((obj) => {
-                    if (!obj.live || obj.type === "hole") return;
+                    if (!obj.live) return;
+
+                    // Handle hole mass display updates (holes don't need physics)
+                    if (obj.type === "hole") {
+                        if (obj.massText) {
+                            obj.massText.text = Math.round(obj.mass * 10) / 10;
+                            obj.massText.visible = displayStats;
+                        }
+                        return;
+                    }
 
                     // Apply gravitational forces from holes
                     applyGravity(obj);
@@ -863,6 +872,16 @@
                     ((obj2.type === "ball_small" || obj2.type === "ball_large") && obj1.type === "hole")
                 ) {
                     const ball = (obj1.type === "ball_small" || obj1.type === "ball_large") ? obj1 : obj2;
+                    const hole = obj1.type === "hole" ? obj1 : obj2;
+
+                    // Transfer ball's mass to hole
+                    const ballMass = ball.mass;
+                    const holeOldMass = hole.mass;
+                    hole.mass += ballMass;
+
+                    console.log(`BALL TO HOLE: ${ballMass.toFixed(2)} mass transferred from ${ball.type} to hole`);
+                    console.log(`  Hole mass: ${holeOldMass.toFixed(2)} → ${hole.mass.toFixed(2)} (+${ballMass.toFixed(2)})`);
+
                     ball.live = false;
                     ball.visible = false;
                     // Award points based on ball size
