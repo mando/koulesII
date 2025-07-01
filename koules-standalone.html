@@ -735,13 +735,7 @@
                     obj.vx *= friction;
                     obj.vy *= friction;
 
-                    // Cap maximum velocity to prevent runaway speeds
-                    const maxVel = obj.type === "rocket" ? 8 : 6;
-                    const vel = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
-                    if (vel > maxVel) {
-                        obj.vx = (obj.vx / vel) * maxVel;
-                        obj.vy = (obj.vy / vel) * maxVel;
-                    }
+                    // Speed limit removed - objects can reach any velocity
 
                     // Update position
                     obj.x += obj.vx;
