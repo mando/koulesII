@@ -625,7 +625,17 @@
                     rocket.fx = 0;
                     rocket.fy = 0;
 
-                    const thrustForce = 0.8;
+                    // Scale thrust force with mass to keep acceleration constant
+                    // acceleration = force / mass, so force = acceleration * mass
+                    const targetAcceleration = 0.2; // Constant acceleration for all masses
+                    const thrustForce = targetAcceleration * rocket.mass;
+
+                    // Log thrust force changes to track scaling
+                    if (!rocket.lastLoggedThrust || Math.abs(thrustForce - rocket.lastLoggedThrust) > 0.05) {
+                        console.log(`CONSTANT ACCEL: mass=${rocket.mass.toFixed(2)}, thrust=${thrustForce.toFixed(3)}, accel=${targetAcceleration.toFixed(3)}`);
+                        rocket.lastLoggedThrust = thrustForce;
+                    }
+
                     const brakeForce = 0.95;
 
                     if (rocket.playerId === 0) {
