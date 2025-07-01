@@ -577,6 +577,8 @@
             }
 
             function createHole(x, y) {
+                // Create a container to hold both the graphics and mass text
+                const container = new PIXI.Container();
                 const hole = new PIXI.Graphics();
 
                 // Draw gravity field visualization (faint rings)
@@ -594,17 +596,40 @@
                 hole.lineStyle(2, 0x404040);
                 hole.drawCircle(0, 0, HOLE_RADIUS);
 
-                hole.x = x;
-                hole.y = y;
-                hole.type = "hole";
-                hole.radius = HOLE_RADIUS;
-                hole.live = true;
+                // Add the graphics to the container
+                container.addChild(hole);
 
-                app.stage.addChild(hole);
-                gameObjects.push(hole);
-                holes.push(hole);
+                // Create mass text display above the hole (for debug mode)
+                const mass = 100; // Holes have large mass for gravity simulation
+                const massText = new PIXI.Text(mass, {
+                    fontFamily: "Arial",
+                    fontSize: 12,
+                    fill: 0xff8800,
+                    align: "center",
+                });
+                massText.anchor.set(0.5, 1); // Center horizontally, bottom aligned
+                massText.x = 0;
+                massText.y = -HOLE_RADIUS - 5; // Position above the hole
+                container.addChild(massText);
 
-                return hole;
+                // Store reference to mass text for updates
+                container.massText = massText;
+
+                // Set initial visibility based on displayStats
+                massText.visible = displayStats;
+
+                container.x = x;
+                container.y = y;
+                container.type = "hole";
+                container.radius = HOLE_RADIUS;
+                container.mass = mass;
+                container.live = true;
+
+                app.stage.addChild(container);
+                gameObjects.push(container);
+                holes.push(container);
+
+                return container;
             }
 
             function gameLoop() {
@@ -722,8 +747,8 @@
                         }
                     }
 
-                    // Update velocity display
-                    if (obj.velocityText) {
+                    // Update velocity display (only for moving objects)
+                    if (obj.velocityText && obj.type !== "hole") {
                         const velocity = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
                         obj.velocityText.text = Math.round(velocity * 10) / 10;
                         obj.velocityText.visible = displayStats;
